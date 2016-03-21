@@ -1,3 +1,7 @@
 
 def greet():
-    print("Hi! I'm HapPyML! Nice to meet you :)")
+    """
+        HappyML is so friendly that greets you!
+    Prints a happy message to the standard output.
+    """
+    print("Hi! I'm HappyML! Nice to meet you :)")
