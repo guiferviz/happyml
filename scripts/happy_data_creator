@@ -1,0 +1,145 @@
+#!/usr/bin/python
+
+import argparse
+import math
+import signal
+import sys
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+import happyml
+
+
+# Parse args.
+parser = argparse.ArgumentParser(description="""
+    Create simple datasets clicking on a plot.
+    Use the left button to create points of class 0 and the right button to create points of class 1.
+    Use the wheel button to delete a point.
+
+    You can create points of more classes (maximun 10 classes) if you press the number keys 0-9 and
+    after that you click with any mouse button. Onces you press a key number, all the points created
+    with the mouse will be of this class unless you press another key.
+
+    If all the points you create are of the same class, it will be considered that it is a regression
+    dataset, i.e. one input feature and one output real number. Avoid this behaviour using the
+    arguments '-r' or '--no-regression'.
+
+    When you close the window, the dataset is printed to the stdout in a CSV format.
+    Use 'happy_data_creator > dataset.csv' to save the results on disk.
+""", formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('-l', '--limits', dest='limits', nargs=4, type=float, default=(-1, 1, -1, 1),
+                    metavar=('XMIN', 'XMAX', 'YMIN', 'YMAX'),
+                    help='Axis limits (default: -1 1 -1 1)')
+parser.add_argument('-n', '--no-scaled', dest='no_scaled', action='store_true',
+                    help='Avoid scaling axes. Useful when the axes scales are quite different. Default: Scaled axes.')
+parser.add_argument('-r', '--no-regression', dest='no_regression', action='store_true',
+                    help='Avoid creating regression dataset still being all the points of the same class.')
+parser.add_argument('-1', '--binary-ones', dest='binary_ones', action='store_true',
+                    help='If there are only points of two classes, the classes are mapped to -1/+1.')
+parser.add_argument('-s', '--save-plot', dest='save_plot', default=False, metavar='IMAGE_FILE',
+                    help='Save plot on a image file before closing.')
+args = parser.parse_args()
+
+
+class DataSetCreator(object):
+    """
+        Manage matplotlib events and store all points in a dataset array.
+    """
+
+    def __init__(self, scatters):
+        self.dataset = []
+        self.selected_class = None
+        self.scatters = scatters
+
+    def onkeydown(self, event):
+        key = ord(event.key[0]) - ord('0')
+        if 0 <= key <= 9:
+            self.selected_class = key
+
+    def onclick(self, event):
+        button = 0 if event.button == 1 else \
+                 1 if event.button == 3 else None
+        x, y = event.xdata, event.ydata
+        # If not wheel button (if not delete) and clicked inside the axes (coordinates are not nan).
+        if button is not None and (x is not None and y is not None):
+            class_number = self.selected_class if self.selected_class else button
+            self._add_point(self.scatters[class_number], [x, y, class_number])
+            plt.draw()
+
+    def onclose(self, event):
+        self._exit()
+
+    def onpick(self, event):
+        # If picket using wheel
+        if event.mouseevent.button == 2:
+            self._remove_point(event.artist, event.ind)
+            plt.draw()
+
+    def _exit(self):
+        """
+            Saves an image of the dataset plot, prints the dataset to the stdout
+        and close the program.
+        """
+        # Save image.
+        if args.save_plot:
+            fig.savefig(args.save_plot)
+        # Join scatters points on a list.
+        data = []
+        for i in range(len(self.scatters)):
+            s = self.scatters[i]
+            for x1, x2 in s.get_offsets():
+                data += [[x1, x2, i]]                
+        data = np.array(data)
+        # If there are points prints dataset to the stdout.
+        if data.shape[0] > 0:
+            # Check if is a classification or regression dataset.
+            classes = np.unique(data[:, 2])  # The sorted unique classes
+            if len(classes) == 1 and not args.no_regression:  # If only one class it is regression data
+                for point in data:
+                    print "%f,%f" % (point[0], point[1])
+            elif len(classes) == 2 and args.binary_ones:
+                for point in data:
+                    print "%f,%f,%d" % (point[0], point[1], -1 if point[2] == classes[0] else 1)
+            else:
+                for point in data:
+                    print "%f,%f,%d" % (point[0], point[1], point[2])
+        sys.exit(0)
+
+    def _add_point(self, scatter, point):
+        """
+            Add point to the given scatter plot.
+        """
+        points = scatter.get_offsets()
+        points = np.append(points, point[0:2])
+        scatter.set_offsets(points)
+
+    def _remove_point(self, scatter, point_idx):
+        """
+            Remove point for the given scatter plot.
+        """
+        points = scatter.get_offsets()
+        points = np.delete(points, point_idx, axis=0)
+        scatter.set_offsets(points)
+
+
+# Make a void plot window.
+fig, ax = plt.subplots()
+if not args.no_scaled:
+    ax.axis('scaled')
+ax.set_xlim(args.limits[0:2])
+ax.set_ylim(args.limits[2:4])
+ax.yaxis.grid()
+ax.xaxis.grid()
+scatters = [ax.scatter([], [], c=happyml.colors["set1"][i], s=50, linewidth=0.25, picker=5) \
+            for i in range(10)]
+
+# Connect matplotlib event handlers.
+creator = DataSetCreator(scatters)
+fig.canvas.mpl_connect('button_press_event', creator.onclick)
+fig.canvas.mpl_connect('close_event', creator.onclose)
+fig.canvas.mpl_connect('key_press_event', creator.onkeydown)
+fig.canvas.mpl_connect('pick_event', creator.onpick)
+
+# Show window plot.
+plt.show()

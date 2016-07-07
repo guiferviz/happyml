@@ -11,7 +11,10 @@ setup(name='happyml',
       author_email='programmingh@gmail.com',
       license='MIT',
       packages=['happyml'],
-      install_requires=['numpy'],
+      install_requires=['numpy', 'matplotlib'],
       test_suite='nose.collector',
       tests_require=['nose'],
-      zip_safe=False)
+      zip_safe=False,
+      scripts = [
+          'scripts/happy_data_creator'
+      ])
