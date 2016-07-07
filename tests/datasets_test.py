@@ -2,7 +2,7 @@
 from unittest import TestCase
 import numpy as np
 
-import happyml.dataset as dt
+import happyml.datasets as dt
 
 
 DATASET01_CSV_NAME = "tests/fixtures/dataset01.csv"
