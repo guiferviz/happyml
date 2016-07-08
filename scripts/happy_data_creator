@@ -9,6 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import happyml
+from happyml import datasets
 
 
 # Parse args.
@@ -26,6 +27,7 @@ parser = argparse.ArgumentParser(description="""
     arguments '-r' or '--no-regression'.
 
     When you close the window, the dataset is printed to the stdout in a CSV format.
+    The first column will be the target/output label.
     Use 'happy_data_creator > dataset.csv' to save the results on disk.
 """, formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-l', '--limits', dest='limits', nargs=4, type=float, default=(-1, 1, -1, 1),
@@ -39,6 +41,8 @@ parser.add_argument('-1', '--binary-ones', dest='binary_ones', action='store_tru
                     help='If there are only points of two classes, the classes are mapped to -1/+1.')
 parser.add_argument('-s', '--save-plot', dest='save_plot', default=False, metavar='IMAGE_FILE',
                     help='Save plot on a image file before closing.')
+parser.add_argument('-d', '--dataset', dest='dataset', default=False, metavar='DATASET_FILE',
+                    help='Load the given dataset.')
 args = parser.parse_args()
 
 
@@ -97,13 +101,13 @@ class DataSetCreator(object):
             classes = np.unique(data[:, 2])  # The sorted unique classes
             if len(classes) == 1 and not args.no_regression:  # If only one class it is regression data
                 for point in data:
-                    print "%f,%f" % (point[0], point[1])
+                    print "%f,%f" % (point[1], point[0])
             elif len(classes) == 2 and args.binary_ones:
                 for point in data:
-                    print "%f,%f,%d" % (point[0], point[1], -1 if point[2] == classes[0] else 1)
+                    print "%d,%f,%f" % (-1 if point[2] == classes[0] else 1, point[0], point[1])
             else:
                 for point in data:
-                    print "%f,%f,%d" % (point[0], point[1], point[2])
+                    print "%d,%f,%f" % (point[2], point[0], point[1])
         sys.exit(0)
 
     def _add_point(self, scatter, point):
@@ -133,6 +137,15 @@ ax.yaxis.grid()
 ax.xaxis.grid()
 scatters = [ax.scatter([], [], c=happyml.colors["set1"][i], s=50, linewidth=0.25, picker=5) \
             for i in range(10)]
+if args.dataset:
+    dataset = datasets.load(args.dataset)
+    if dataset.get_N() > 0 and dataset.get_k() == 1:
+        if dataset.get_d() == 2:  # Classification dataset.
+            for i in range(10):
+                class_i = dataset.Y.flatten() == i
+                scatters[i].set_offsets(dataset.X[class_i, 0:2])
+        elif dataset.get_d() == 1:  # Regression dataset.
+            scatters[0].set_offsets(np.hstack((dataset.X, dataset.Y)))
 
 # Connect matplotlib event handlers.
 creator = DataSetCreator(scatters)
