@@ -9,7 +9,7 @@ import matplotlib as mpl
 
 def greet():
     """
-        HappyML is so friendly that greets you!
+    HappyML is so friendly that greets you!
     Prints a happy message to the standard output.
     """
     print("Those about to learn we salute you :)")

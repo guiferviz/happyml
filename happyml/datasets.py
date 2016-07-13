@@ -4,7 +4,7 @@ import numpy as np
 
 class DataSet():
     """
-        Generic collection of inputs and outputs.
+    Generic collection of inputs and outputs.
     """
 
     X = np.array([])
@@ -13,21 +13,21 @@ class DataSet():
 
     def get_N(self):
         """
-            Gets the number of samples in the dataset.
+        Gets the number of samples in the dataset.
         """
-        # Both expressions are equivalent.
-        # return self.X.shape[0]
-        return self.Y.shape[0]
+        # Both expressions are not equivalent.
+        # return self.Y.shape[0] <-- Can be 0 if no output assigned.
+        return self.X.shape[0]
 
     def get_d(self):
         """
-            Gets the dimension of each sample in the dataset.
+        Gets the dimension of each sample in the dataset.
         """
         return self.X.shape[1]
 
     def get_k(self):
         """
-            Gets the number of outputs of each sample.
+        Gets the number of outputs of each sample.
         """
         return self.Y.shape[1]
 
