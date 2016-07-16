@@ -33,6 +33,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -271,7 +272,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'HappyML', u'HappyML Documentation',
-     author, 'HappyML', 'One line description of project.',
+     author, 'HappyML', 'Machine Learning library for academic purposes.',
      'Miscellaneous'),
 ]
 
