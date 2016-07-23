@@ -1,5 +1,13 @@
 
+from os import listdir
+from os.path import join
+
 from setuptools import setup
+
+
+# Install all files under scripts dir.
+SCRIPTS_DIR = "scripts"
+scripts = [join(SCRIPTS_DIR, i) for i in listdir(SCRIPTS_DIR)]
 
 
 setup(name='happyml',
@@ -15,6 +23,4 @@ setup(name='happyml',
       test_suite='nose.collector',
       tests_require=['nose'],
       zip_safe=False,
-      scripts = [
-          'scripts/happy_data_creator'
-      ])
+      scripts=scripts)
