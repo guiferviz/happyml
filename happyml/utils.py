@@ -44,3 +44,23 @@ def get_f(expr):
     """
     return lambda x, y: eval(expr, math.__dict__, {"x": x, "y": y})
 
+
+def central_difference(f, x, y, h=0.1):
+    """Compute the derivative of the function f in x, y using the
+    central difference method.
+
+    Args:
+        f (function): Function with two parameters (x and y).
+        x (float): Coordinate x where the gradient will be computed.
+        y (float): Coordinate y where the gradient will be computed.
+        h (float): Step size.
+
+    Returns:
+        Two dimensional gradient vector (numpy.ndarray).
+
+    """
+    gradient = np.zeros(2)
+    gradient[0] = (f(x + h, y) - f(x - h, y)) / (2 * h)
+    gradient[1] = (f(x, y + h) - f(x, y - h)) / (2 * h)
+    return gradient
+
