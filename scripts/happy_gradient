@@ -30,6 +30,14 @@ parser.add_argument('-c', '--levels-curves', dest='levels_curves', nargs='+', ty
 parser.add_argument('-s', '--start', dest='start', nargs=2, type=float, default=(0, 0),
                     metavar=('X', 'Y'),
                     help='Start point where the gradients will be ploted (default: 0 0).')
+parser.add_argument('-f', '--field', dest='gradient_field',  action='store_true',
+                    help='Plot the gradient field.')
+parser.add_argument('-n', '--no-scaled', dest='no_scaled', action='store_true',
+                    help='Avoid scaling axes. Useful when the axes scales are quite different. '
+                         'If the axes are not scaled the gradient may seem no perpendicular to the '
+                         'level curves. Default: Scaled axes.')
+parser.add_argument('-g', '--grid', dest='grid', action='store_true',
+                    help='Show grid.')
 args = parser.parse_args()
 
 # Prepare arguments.
@@ -78,11 +86,17 @@ for i, expr in enumerate(args.expressions):
                                                   fc=color, mutation_scale=20, zorder=10)
     ax.add_patch(gradients_arrows[i])
 
+    # Plot gradient fields.
+    if args.gradient_field:
+        G = np.gradient(Z)  # first array for rows (Y), second for columns (X)
+        ax.quiver(X[::2, ::2], Y[::2, ::2], G[1][::2, ::2], G[0][::2, ::2], zorder=10)
+    if args.grid:
+        ax.grid()
+    if not args.no_scaled:
+        ax.set_aspect('equal', adjustable='box')
+
 
 def onmove(event):
-    G = np.gradient(Z)
-    #print len(G)
-    #plt.quiver(X, Y, G[1], G[0], scale=2)
     x, y = event.xdata, event.ydata
     # Do nothing if move mouse outside the axis.
     if x is None or y is None:  return
