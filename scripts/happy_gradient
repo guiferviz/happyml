@@ -27,7 +27,7 @@ parser.add_argument('-c', '--levels-curves', dest='levels_curves', nargs='+', ty
                     metavar='N_LEVELS_CURVES',
                     help='Number of level curves to plot. Can be a number or a list of numbers '
                          '(at least one per function).')
-parser.add_argument('-s', '--start', dest='start', nargs=2, type=float, default=(0, 0),
+parser.add_argument('-s', '--start', dest='start', nargs=2, type=float, default=None,
                     metavar=('X', 'Y'),
                     help='Start point where the gradients will be ploted (default: 0 0).')
 parser.add_argument('-f', '--field', dest='gradient_field',  action='store_true',
@@ -41,6 +41,9 @@ parser.add_argument('-g', '--grid', dest='grid', action='store_true',
 args = parser.parse_args()
 
 # Prepare arguments.
+if args.start is None:
+    args.start = [(args.limits[0] + args.limits[1]) / 2,
+                  (args.limits[2] + args.limits[3]) / 2]
 args.start = np.array(args.start)
 if len(args.levels_curves) == 1:
     args.levels_curves *= 10

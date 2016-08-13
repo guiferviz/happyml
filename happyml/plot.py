@@ -66,6 +66,13 @@ blue_red = LinearSegmentedColormap('BlueRed', cdict)
 plt.register_cmap(cmap=blue_red)
 
 
+def get_class_color(n_class, format="hex"):
+    if "hex" in format:
+        return classes_colors[theme][n_class]
+
+    return tuple(rgb_colors[theme][n_class])  # rgb format
+
+
 def light_hex_color(color_hex, light=0.1):
     rgb = hex2color(color_hex)
     light_rgb = [i + light if i + light <= 1 else 1 for i in rgb]

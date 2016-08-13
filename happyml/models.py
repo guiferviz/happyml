@@ -15,7 +15,7 @@ class Hypothesis(object):
 class Perceptron(Hypothesis):
 
     def __init__(self, w=None, b=None):
-        self.w = w if w is not None else np.zeros(0)
+        self.w = w if w is not None else np.zeros(2)
         self.b = b if b is not None else 0
 
     def h(self, x):
@@ -28,7 +28,7 @@ class Perceptron(Hypothesis):
 class LinearRegression(Hypothesis):
 
     def __init__(self, w=None, b=None):
-        self.w = w if w is not None else np.zeros(0)
+        self.w = w if w is not None else np.zeros(2)
         self.b = b if b is not None else 0
 
     def h(self, x):

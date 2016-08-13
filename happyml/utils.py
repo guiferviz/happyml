@@ -31,10 +31,10 @@ def get_f(expr):
                     because it will be evaluated using "eval" function.
                     The expression can contain also calls to functions in
                     the Python "math" module (e.g. "sqrt(x)+log(y)"). Be
-                    aware that using functions like "sqrt(x)" in negative
-                    numbers will rise an exception. Use "x**0.5" instead
-                    or change the evaluation domain to positive numbers
-                    to avoid that problem.
+                    aware that using functions like "sqrt(x)" or "x**0.5"
+                    in negative numbers will rise an exception. Change the
+                    evaluation domain to positive numbers to avoid that
+                    problem.
 
     Returns:
         Return a lambda function that receives 2 parameters: x and y.
