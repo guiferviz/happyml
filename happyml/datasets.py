@@ -7,16 +7,18 @@ class DataSet():
     Generic collection of inputs and outputs.
     """
 
-    X = np.array([])
+    X = np.empty((0, 0))
 
-    Y = np.array([])
+    Y = np.empty((0, 0))
+
 
     def get_N(self):
         """
         Gets the number of samples in the dataset.
         """
-        # Both expressions are not equivalent.
-        # return self.Y.shape[0] <-- Can be 0 if no output assigned.
+        # The next two expressions are not necessarily equivalent:
+        # self.X.shape[0] and self.Y.shape[0]
+        # self.Y.shape[0] <-- Can be 0 if no output assigned.
         return self.X.shape[0]
 
     def get_d(self):
@@ -79,3 +81,8 @@ def load_from_stream(stream, delimiter=",", n_outputs=1,
         dataset.Y[np.arange(0, N), indexes] = 1
 
     return dataset
+
+
+def save(file, dataset, delimiter=",", header="", footer=""):
+    data = np.column_stack((dataset.Y, dataset.X))
+    np.savetxt(file, data, delimiter=delimiter, header=header, footer=footer)
