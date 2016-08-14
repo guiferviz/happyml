@@ -4,7 +4,8 @@ Machine Learning library for academic purposes.
 GitHub: https://github.com/guiferviz/happyml-py
 """
 
-import matplotlib as mpl
+
+__version__ = '0.0.1'
 
 
 def greet():
