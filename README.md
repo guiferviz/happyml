@@ -6,6 +6,7 @@
  HappyML (Machine Learning Python Library)
 ===========================================
 
+[![Build Status](https://travis-ci.org/guiferviz/happyml-py.svg?branch=dev)](https://travis-ci.org/guiferviz/happyml-py)
 [![Documentation Status](https://readthedocs.org/projects/happyml/badge/?version=dev)](http://happyml.readthedocs.io/en/dev/?badge=dev)
 [![PyPI version](https://badge.fury.io/py/happyml.svg)](https://badge.fury.io/py/happyml)
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)](./LICENSE)
