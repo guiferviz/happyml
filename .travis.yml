@@ -12,4 +12,8 @@ install:
 
 # Command to run tests
 script:
-  - python setup.py nosetests
+  - python setup.py nosetests --with-coverage --cover-package=happyml
+
+# Upload coverage results.
+after_success:
+  - /home/travis/virtualenv/python2.7.9/bin/coveralls
