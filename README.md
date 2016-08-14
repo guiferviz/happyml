@@ -6,6 +6,7 @@
  HappyML (Machine Learning Python Library)
 ===========================================
 
+[![Documentation Status](https://readthedocs.org/projects/happyml/badge/?version=dev)](http://happyml.readthedocs.io/en/dev/?badge=dev)
 [![PyPI version](https://badge.fury.io/py/happyml.svg)](https://badge.fury.io/py/happyml)
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)]()
 
@@ -44,7 +45,7 @@ If everything is OK you will see the output:
 Documentation
 -------------
 
-https://guiferviz.github.io/happyml-py/
+Dev documentation: [http://happyml.readthedocs.io/en/dev/](http://happyml.readthedocs.io/en/dev/)
 
 
 Contact
