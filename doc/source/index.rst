@@ -1,8 +1,8 @@
 
-HappyML documentation
-=====================
+*HappyML* documentation
+=======================
 
-HappyML is a Machine Learning Python library used for academical purposes.
+*HappyML* is a Machine Learning Python library used for academical purposes.
 
 
 Guide
