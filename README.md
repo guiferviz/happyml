@@ -8,6 +8,7 @@
 
 [![Build Status](https://travis-ci.org/guiferviz/happyml-py.svg?branch=dev)](https://travis-ci.org/guiferviz/happyml-py)
 [![Coverage Status](https://coveralls.io/repos/github/guiferviz/happyml-py/badge.svg?branch=dev)](https://coveralls.io/github/guiferviz/happyml-py?branch=dev)
+[![Code Health](https://landscape.io/github/guiferviz/happyml-py/dev/landscape.svg?style=flat)](https://landscape.io/github/guiferviz/happyml-py/dev)
 [![Documentation Status](https://readthedocs.org/projects/happyml/badge/?version=dev)](http://happyml.readthedocs.io/en/dev/?badge=dev)
 [![PyPI version](https://badge.fury.io/py/happyml.svg)](https://badge.fury.io/py/happyml)
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)](./LICENSE)
