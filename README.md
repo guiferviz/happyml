@@ -9,7 +9,7 @@
 [![PyPI version](https://badge.fury.io/py/happyml.svg)](https://badge.fury.io/py/happyml)
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)]()
 
-Machine Learning Python library for academic purposes. *HappyML* is a little project supposed to be used by beginners in the Machine Learning field. It has simple implementations of the more common algorithms. *HappyML* only depends on *numpy* and *matplotlib*. The high level of that libraries makes easy to write and read the code.
+Machine Learning Python library for academic purposes. *HappyML* is a little project supposed to be used by beginners in the Machine Learning field. It has simple implementations of the more common algorithms. *HappyML* only depends on *numpy* and *matplotlib*. The high level of those libraries makes easy to write and read the code.
 
 
 Installation
