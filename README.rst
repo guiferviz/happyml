@@ -1,5 +1,5 @@
 
-.. image:: happyml-logo.png
+.. image:: https://github.com/guiferviz/happyml-py/raw/dev/doc/source/happyml-logo.png
     :width: 200px
     :align: center
     :alt: HappyML logo
@@ -36,14 +36,10 @@ Installation
 
 You can install ``happyml`` easily using ``pip``::
 
-::
-
     pip install happyml
 
 If you prefer you can clone the repository and install the library via
 ``setup.py``::
-
-::
 
     git clone https://github.com/guiferviz/happyml-py.git happyml
     cd happyml
@@ -76,7 +72,10 @@ Contact
 
 Mail me (`guiferviz`_) or create an issue.
 
-**Remember to be HAPPY :smile: :blush: :relaxed:**
-
 .. _guiferviz: mailto:guiferviz@gmail.com
+
+
+
+
+**Remember to be HAPPY :smile: :blush: :relaxed:**
 
