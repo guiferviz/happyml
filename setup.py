@@ -11,11 +11,6 @@ from happyml import __version__
 SCRIPTS_DIR = "scripts"
 scripts = [join(SCRIPTS_DIR, i) for i in listdir(SCRIPTS_DIR)]
 
-# Read requirements.
-install_requires = [line for line in
-            open("requirements.txt").read().splitlines() if line]
-tests_require = [line for line in
-            open("requirements-tests.txt").read().splitlines() if line]
 
 setup(name='happyml',
       version=__version__,
@@ -27,8 +22,8 @@ setup(name='happyml',
       author_email='guiferviz@gmail.com',
       license='MIT',
       packages=['happyml'],
-      install_requires=install_requires,
-      tests_require=tests_require,
+      install_requires=['numpy', 'matplotlib'],
+      tests_require=['nose'],
       test_suite='nose.collector',
       zip_safe=False,
       scripts=scripts)
