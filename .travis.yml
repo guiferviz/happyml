@@ -8,6 +8,7 @@ cache: pip
 
 # Command to install HappyML and dependencies.
 install:
+  - pip install coveralls
   - python setup.py install
 
 # Command to run tests
@@ -16,4 +17,4 @@ script:
 
 # Upload coverage results.
 after_success:
-  - /home/travis/virtualenv/python2.7.9/bin/coveralls
+  - coveralls
