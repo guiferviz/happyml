@@ -1,4 +1,11 @@
 
+"""HappyML is a Machine Learning library for educational purposes.
+
+Author: guiferviz
+GitHub: https://github.com/guiferviz/happyml-py
+"""
+
+
 from os import listdir
 from os.path import join
 
@@ -9,12 +16,12 @@ from happyml import __version__
 
 # Install all files under scripts dir.
 SCRIPTS_DIR = "scripts"
-scripts = [join(SCRIPTS_DIR, i) for i in listdir(SCRIPTS_DIR)]
+SCRIPTS = [join(SCRIPTS_DIR, i) for i in listdir(SCRIPTS_DIR)]
 
 
 setup(name='happyml',
       version=__version__,
-      description='Machine Learning library for educational purpose.',
+      description='Machine Learning library for educational purposes.',
       long_description=open('README.rst').read(),
       keywords='happy machine learning',
       url='https://github.com/guiferviz/happyml-py',
@@ -26,4 +33,4 @@ setup(name='happyml',
       tests_require=['nose'],
       test_suite='nose.collector',
       zip_safe=False,
-      scripts=scripts)
+      scripts=SCRIPTS)
