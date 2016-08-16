@@ -13,7 +13,23 @@ from happyml import datasets
 
 
 class DataSetCreator(object):
-    """Manage matplotlib events and store all points in a dataset array.
+    """Create simple datasets clicking on a plot.
+    Use the left button to create points of class 0 and the right button to create points of class 1.
+    Use the wheel button to delete a point.
+
+    You can create points of more classes (maximun 10 classes) if you press the number keys 0-9 and
+    after that you click with any mouse button. Onces you press a key number, all the points created
+    with the mouse will be of this class unless you press another key.
+
+    If all the points you create are of the same class, it will be considered that it is a regression
+    dataset, i.e. one input feature and one output real number. Avoid this behaviour using the
+    arguments '-r' or '--no-regression'.
+
+    When you close the window, the dataset is printed to the stdout in a CSV format.
+    The first column will be the target/output label.
+    Use 'happy_data_creator > dataset.csv' to save the results on disk.
+
+    This class manage matplotlib events and store all points in a dataset array.
 
     """
 
@@ -103,7 +119,7 @@ class DataSetCreator(object):
         # If not wheel button (if not delete) and clicked inside the axes (coordinates are not nan).
         if button is not None and (x is not None and y is not None):
             class_number = self.selected_class if self.selected_class else button
-            self._add_point(self.scatters[class_number], [x, y, class_number])
+            self._add_point(class_number, [x, y])
             plt.draw()
 
     def onclose(self, event):
@@ -119,25 +135,25 @@ class DataSetCreator(object):
         pass
 
     def _exit(self):
-        """
-            Saves an image of the dataset plot, prints the dataset to the stdout
-        and close the program.
+        """Saves an image of the dataset plot before exit.
+
         """
         # Save image.
         if self.save_plot:
             self.fig.savefig(self.save_plot)
 
-    def _add_point(self, scatter, point):
+    def _add_point(self, class_number, point):
+        """Add point to the given class.
+
         """
-            Add point to the given scatter plot.
-        """
+        scatter = self.scatters[class_number]
         points = scatter.get_offsets()
         points = np.append(points, point[0:2])
         scatter.set_offsets(points)
 
     def _remove_point(self, scatter, point_idx):
-        """
-            Remove point for the given scatter plot.
+        """Remove point for the given scatter plot.
+
         """
         points = scatter.get_offsets()
         points = np.delete(points, point_idx, axis=0)

@@ -10,7 +10,7 @@ DATASET01_TSV_NAME = "tests/fixtures/dataset01.tsv"
 DATASET01 = dt.DataSet()
 DATASET01.X = np.array([[1, 1], [-1, 1], [1, -1], [-1, -1]])
 DATASET01.Y = np.array([[1], [1], [-1], [-1]])
-DATASET01_ONE_SHOT_Y = np.array([[0, 0, 1], [0, 0, 1], [1, 0, 0], [1, 0, 0]])
+DATASET01_ONE_HOT_Y = np.array([[0, 0, 1], [0, 0, 1], [1, 0, 0], [1, 0, 0]])
 
 
 class DataSetTest(TestCase):
@@ -80,9 +80,9 @@ class DataSetTest(TestCase):
         with self.assertRaises(IOError):
             dt.load("happy.csv")
 
-    def test_one_shot_output(self):
+    def test_one_hot_output(self):
         dataset = dt.load(DATASET01_CSV_NAME, one_hot_output=True)
-        np.testing.assert_array_equal(dataset.Y, DATASET01_ONE_SHOT_Y,
+        np.testing.assert_array_equal(dataset.Y, DATASET01_ONE_HOT_Y,
                                       err_msg="DataSet Y not loaded correctly.")
         self.assertEqual(dataset.get_k(), 3)
         self.assertEqual(dataset.get_d(), 2)
