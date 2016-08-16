@@ -81,7 +81,7 @@ class DataSetTest(TestCase):
             dt.load("happy.csv")
 
     def test_one_shot_output(self):
-        dataset = dt.load(DATASET01_CSV_NAME, one_shot_output=True)
+        dataset = dt.load(DATASET01_CSV_NAME, one_hot_output=True)
         np.testing.assert_array_equal(dataset.Y, DATASET01_ONE_SHOT_Y,
                                       err_msg="DataSet Y not loaded correctly.")
         self.assertEqual(dataset.get_k(), 3)
