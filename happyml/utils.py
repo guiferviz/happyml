@@ -17,7 +17,7 @@ def count_equals(v1, v2):
 
     """
     if v1.ndim != 1 or v2.ndim != 1:
-    	raise ValueError("count_equals expect two vectors")
+        raise ValueError("count_equals expect two vectors")
     return np.count_nonzero(v1 == v2)
 
 
@@ -56,11 +56,24 @@ def central_difference(f, x, y, h=0.1):
         h (float): Step size.
 
     Returns:
-        Two dimensional gradient vector (numpy.ndarray).
+        gradient (numpy.ndarray): Two dimensional gradient vector.
 
     """
     gradient = np.zeros(2)
     gradient[0] = (f(x + h, y) - f(x - h, y)) / (2 * h)
     gradient[1] = (f(x, y + h) - f(x, y - h)) / (2 * h)
     return gradient
+
+
+def one_hot(vector):
+    max_output = np.max(vector)
+    min_output = np.min(vector)
+    N = vector.shape[0]
+    k = max_output - min_output + 1
+    indexes = np.add(vector, -min_output)
+    indexes = indexes.astype(int).reshape(N)
+    vector = np.zeros((N, k))
+    vector[np.arange(0, N), indexes] = 1
+
+    return vector
 

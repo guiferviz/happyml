@@ -24,6 +24,8 @@ HappyML (Machine Learning Python Library)
 .. |License| image:: https://img.shields.io/badge/license-GPL-blue.svg
    :target: ./LICENSE
 
+**¡UNDER CONSTRUCTION!**
+
 Machine Learning Python library for academic purposes. *HappyML* is a
 little project supposed to be used by beginners in the Machine Learning
 field. It has simple implementations of the more common algorithms.
