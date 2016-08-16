@@ -16,5 +16,6 @@ script:
   - python setup.py nosetests --with-coverage --cover-package=happyml
 
 # Upload coverage results.
+# COVERALLS_REPO_TOKEN env var should be defined.
 after_success:
   - coveralls
