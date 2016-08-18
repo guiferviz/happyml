@@ -69,7 +69,7 @@ def one_hot(vector):
     max_output = np.max(vector)
     min_output = np.min(vector)
     N = vector.shape[0]
-    k = max_output - min_output + 1
+    k = int(max_output - min_output + 1)
     indexes = np.add(vector, -min_output)
     indexes = indexes.astype(int).reshape(N)
     vector = np.zeros((N, k))
