@@ -42,6 +42,18 @@ happyml.plot
     :undoc-members:
 
 
+happyml.tools
+-------------
+
+.. automodule:: happyml.tools
+    :members:
+    :undoc-members:
+
+.. automodule:: happyml.tools.data_creator
+    :members:
+    :undoc-members:
+
+
 Indices and tables
 ==================
 

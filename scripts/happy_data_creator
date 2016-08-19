@@ -47,18 +47,14 @@ args = parser.parse_args()
 
 
 def printDataSet(dataset):
-    """Saves the created dataset to the stdout file, i.e.,
-    prints the dataset.
-
-    """
+    """Save the dataset to the stdout file, i.e., prints the dataset."""
     datasets.save(sys.stdout, dataset)
 
 
 def main():
-    """Open a DataSetCreator and prints the result on the
-    standard output.
-
-    """
+    """Open a DataSetCreator and prints the result on the stdout."""
+    if args.dataset:
+        args.dataset = datasets.load(args.dataset)
     dic_args = vars(args)
     creator = DataSetCreator(**dic_args)
     creator.show()

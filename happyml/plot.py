@@ -81,10 +81,41 @@ def light_hex_color(color_hex, light=0.1):
 
 def predict_area(model, bounds=[-1, 1, -1, 1], samples=50,
                  x_samples=None, y_samples=None):
-    """Evaluates a model on a rectangular area.
+    """Evaluate a model on a rectangular area.
 
     Args:
         model (happyml.models.Hypothesis): Model to evaluate.
+
+    Returns:
+        X, Y, Z (np.array): 3 matrices of the same size, i.e. of size
+        ``(x_samples, y_samples)``.
+
+        **X** (np.array): :math:`X_{ij}` contains the x coordinate of each\
+            :math:`Z_{ij}` value. All the rows in a column contains the\
+            same number.
+
+        **Y** (np.array): :math:`Y_{ij}` contains the y coordinate of each\
+            :math:`Z_{ij}` value. All the columns in a row contains the\
+            same number.
+
+        **Z** (np.array): result of appliying ``f`` on
+            :math:`(X_{ij}, Y_{ij})` coordinates. In other words
+            ``Z[i, j] = f(X[i, j], Y[i, j])``.
+
+    Raises:
+        ValueError: if ``len`` of ``bounds`` is not 4.
+
+    Example:
+        .. code-block:: python
+
+            def fun(X, Y):
+                # Linear function. X and Y are matrices, then the output
+                # will be a matrix (Z matrix).
+                return X * w1 + Y * w2 + b
+
+            # Evaluates function fun on a square centered on the origin
+            # with sides of length 2 (from -1 to 1).
+            X, Y, Z = grid_function(fun)
     """
     # Check parameters.
     if len(bounds) != 4:
@@ -105,7 +136,7 @@ def predict_area(model, bounds=[-1, 1, -1, 1], samples=50,
 
 def grid_function(f, bounds=[-1, 1, -1, 1], samples=50,
                   x_samples=None, y_samples=None):
-    """Evaluates a function ``f`` on a rectangular area.
+    """Evaluate a function ``f`` on a rectangular area.
 
     Args:
         f (function): Function to be applied on each sample of the rectangular
@@ -115,27 +146,29 @@ def grid_function(f, bounds=[-1, 1, -1, 1], samples=50,
     Keyword Args:
         bounds (array): Position and dimension of the rectangular area.
             Indicated by an array of the form [xmin, xmax, ymin, ymax].
+            Defaults to `[-1, 1, -1, 1]`.
         samples (int): number of x and y samples to be used. The more
-            samples, the more precision.
+            samples, the more precision. Defaults to 50.
         x_samples (int): Use it when you want a different number
-            of samples for x axis.
+            of samples for x axis. Defaults to `samples`.
         y_samples (int): Use it when you want a different number
-            of samples for y axis.
+            of samples for y axis. Defaults to `samples`.
 
     Returns:
         X, Y, Z (np.array): 3 matrices of the same size, i.e. of size
-        ``(x_samples, y_samples)``.
+        ``(y_samples, x_samples)``.
 
-        **X** (np.array): :math:`X_{ij}` contains the x coordinate of each\
-            :math:`Z_{ij}` element. All the rows in a column contains the\
-            same number.
+        **X** (np.array): :math:`X_{ij}` contains the x coordinate used\
+            to compute the :math:`Z_{ij}` value. All the rows in a column\
+            contains the same number.
 
-        **Y** (np.array): :math:`Y_{ij}` contains the y coordinate of each\
-            :math:`Z_{ij}` element. All the columns in a row contains the\
-            same number.
+        **Y** (np.array): :math:`Y_{ij}` contains the y coordinate used\
+            to compute the :math:`Z_{ij}` value. All the columns in a row\
+            contains the same number.
 
-        **Z** (np.array): result of appliying ``f`` on :math:`(X_{ij}, Y_{ij})`\
-            coordinates. In other words ``Z[i, j] = f(X[i, j], Y[i, j])``.
+        **Z** (np.array): result of appliying `f` on\
+            :math:`(X_{ij}, Y_{ij})` coordinates. In other words\
+            ``Z[i, j] = f(X[i, j], Y[i, j])``.
 
     Raises:
         ValueError: if ``len`` of ``bounds`` is not 4.
@@ -151,6 +184,10 @@ def grid_function(f, bounds=[-1, 1, -1, 1], samples=50,
             # Evaluates function fun on a square centered on the origin
             # with sides of length 2 (from -1 to 1).
             X, Y, Z = grid_function(fun)
+
+    See Also:
+        :attr:`happyml.plot.grid_function_slow`
+
     """
     if len(bounds) != 4:
         raise ValueError("bounds need 4 values: [xmin, xmax, ymin, ymax]")
@@ -162,6 +199,19 @@ def grid_function(f, bounds=[-1, 1, -1, 1], samples=50,
 
 def grid_function_slow(f, bounds=[-1, 1, -1, 1], samples=50,
                        x_samples=None, y_samples=None):
+    """Evaluate a function ``f`` on a rectangular area.
+
+    This function is slow because the function `f` does not receive
+    matrices, only 2 numbers.
+
+    See Also:
+        :attr:`happyml.plot.grid_function`
+
+    """
+    bounds = [-1, 1, -1, 1] if bounds is None else bounds
+    if len(bounds) != 4:
+        raise ValueError("bounds need 4 values: [xmin, xmax, ymin, ymax]")
+
     x = np.linspace(bounds[0], bounds[1], num=x_samples or samples)
     y = np.linspace(bounds[2], bounds[3], num=y_samples or samples)
     X, Y = np.meshgrid(x, y)
@@ -208,16 +258,19 @@ def pcolor(fig, f, bounds=[-1, 1, -1, 1], cmap=cm.coolwarm, samples=50,
 def plot(dataset, fig=plt, marker='o', s=50, linewidth=0.25):
     """Plot a dataset.
 
-    Warning: this function changes the scale of the plot. Use something
-    like::
+    Warning:
+        This function changes the scale of the plot. Use something
+        like
+        ::
 
-        ax = plt.gca()
-        ax.set_autoscale_on(False)
+            ax = plt.gca()
+            ax.set_autoscale_on(False)
 
-    to avoid it.
+        to avoid it.
 
     """
     classes = dataset.Y.flatten().astype(int)
+    classes[classes == -1] = 0
     return fig.scatter(dataset.X[:, 0], dataset.X[:, 1],
                        c=classes_colors[theme][classes], s=s,
                        linewidth=linewidth, marker=marker, zorder=10)

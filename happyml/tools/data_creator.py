@@ -1,35 +1,41 @@
 
-import argparse
-import math
-import signal
-import sys
-
 import numpy as np
 from matplotlib import pyplot as plt
 
-import happyml
 from happyml import plot
 from happyml import datasets
 
 
 class DataSetCreator(object):
+
     """Create simple datasets clicking on a plot.
-    Use the left button to create points of class 0 and the right button to create points of class 1.
-    Use the wheel button to delete a point.
 
-    You can create points of more classes (maximun 10 classes) if you press the number keys 0-9 and
-    after that you click with any mouse button. Onces you press a key number, all the points created
-    with the mouse will be of this class unless you press another key.
+    This class manage *matplotlib* events and store all points in a
+    :attr:`happyml.datasets.DataSet` object.
 
-    If all the points you create are of the same class, it will be considered that it is a regression
-    dataset, i.e. one input feature and one output real number. Avoid this behaviour using the
-    arguments '-r' or '--no-regression'.
+    **Instructions of use**:
 
-    When you close the window, the dataset is printed to the stdout in a CSV format.
-    The first column will be the target/output label.
-    Use 'happy_data_creator > dataset.csv' to save the results on disk.
+        Use the **left button** to create points of class 0 and
+        the **right button** to create points of class 1.
+        Use the **wheel button** to delete a point.
 
-    This class manage matplotlib events and store all points in a dataset array.
+        You can create points of more classes (maximun 10 classes)
+        if you press the **number keys 0-9** and after that you click
+        with any mouse button. Onces you press a key number, all the
+        points created with the mouse will be of this class unless you
+        press another key.
+
+        If all the points you create are of the same class, it will be
+        considered that it is a regression dataset, i.e., one input feature
+        and one output real number. Avoid this behaviour setting the kwarg
+        'no_regression' to True.
+
+    Example:
+        .. code-block:: python
+
+            creator = DataSetCreator()
+            creator.show()  # show interactive plot and wait until close
+            dataset = creator.getDataSet()  # obtain DataSet object
 
     """
 
@@ -42,10 +48,11 @@ class DataSetCreator(object):
         ax.set_ylim(args['limits'][2:4])
         ax.yaxis.grid()
         ax.xaxis.grid()
-        scatters = [ax.scatter([], [], c=plot.get_class_color(i), s=50, linewidth=0.25, picker=5) \
+        scatters = [ax.scatter([], [], c=plot.get_class_color(i), s=50,
+                               linewidth=0.25, picker=5)
                     for i in range(10)]
         if args['dataset']:
-            dataset = datasets.load(args['dataset'])
+            dataset = args['dataset']
             if dataset.get_N() > 0 and dataset.get_k() == 1:
                 if dataset.get_d() == 2:  # Classification dataset.
                     for i in range(10):
@@ -104,15 +111,15 @@ class DataSetCreator(object):
         return dataset
 
     def show(self):
-        # Show window plot.
+        """Show interactive plot and wait until close."""
         plt.show()
 
-    def onkeydown(self, event):
+    def _onkeydown(self, event):
         key = ord(event.key[0]) - ord('0')
         if 0 <= key <= 9:
             self.selected_class = key
 
-    def onclick(self, event):
+    def _onclick(self, event):
         button = 0 if event.button == 1 else \
                  1 if event.button == 3 else None
         x, y = event.xdata, event.ydata
@@ -122,39 +129,27 @@ class DataSetCreator(object):
             self._add_point(class_number, [x, y])
             plt.draw()
 
-    def onclose(self, event):
-        self._exit()
+    def _onclose(self, event):
+        """Saves an image of the dataset plot before exit."""
+        # Save image.
+        if self.save_plot:
+            self.fig.savefig(self.save_plot)
 
-    def onpick(self, event):
+    def _onpick(self, event):
         # If picket using wheel
         if event.mouseevent.button == 2:
             self._remove_point(event.artist, event.ind)
             plt.draw()
 
-    def onexit(self):
-        pass
-
-    def _exit(self):
-        """Saves an image of the dataset plot before exit.
-
-        """
-        # Save image.
-        if self.save_plot:
-            self.fig.savefig(self.save_plot)
-
     def _add_point(self, class_number, point):
-        """Add point to the given class.
-
-        """
+        """Add point to the given class."""
         scatter = self.scatters[class_number]
         points = scatter.get_offsets()
         points = np.append(points, point[0:2])
         scatter.set_offsets(points)
 
     def _remove_point(self, scatter, point_idx):
-        """Remove point for the given scatter plot.
-
-        """
+        """Remove point for the given scatter plot."""
         points = scatter.get_offsets()
         points = np.delete(points, point_idx, axis=0)
         scatter.set_offsets(points)
