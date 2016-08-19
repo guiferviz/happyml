@@ -46,6 +46,11 @@ rgb_colors = {
     "set2" : np.array([]),
 }
 
+scatter_prop = {
+    's': 50,
+    'linewidth': 0.25,
+    'marker': 'o'
+}
 
 cdict  = {'red':   ((0.0, 1.0, 1.0),
                    (0.5, 1.0, 1.0),
@@ -78,32 +83,53 @@ def light_hex_color(color_hex, light=0.1):
     light_rgb = [i + light if i + light <= 1 else 1 for i in rgb]
     return rgb2hex(light_rgb)
 
+binary_ones_colors = (
+    light_hex_color(get_class_color(0), light=0.25),
+    light_hex_color(get_class_color(1), light=0.25),
+)
 
-def predict_area(model, bounds=[-1, 1, -1, 1], samples=50,
-                 x_samples=None, y_samples=None):
+binary_margin_colors = (
+    light_hex_color(get_class_color(0), light=0.25),
+    light_hex_color(get_class_color(0), light=0.35),
+    light_hex_color(get_class_color(1), light=0.35),
+    light_hex_color(get_class_color(1), light=0.25),
+)
+
+
+def predict_area(model, limits=None, samples=50,
+                 x_samples=None, y_samples=None, **kwargs):
     """Evaluate a model on a rectangular area.
 
     Args:
-        model (happyml.models.Hypothesis): Model to evaluate.
+        model (:attr:`happyml.models.Hypothesis`): Model to evaluate.
+        limits (list): Position and dimension of the prediction area.
+            Indicated by a list of the form [xmin, xmax, ymin, ymax].
+            Defaults to ``[-1, 1, -1, 1]``.
+        samples (int): number of x and y samples to be used. The more
+            samples, the more precision. Defaults to 50.
+        x_samples (int): Use it when you want a different number
+            of samples for x axis. Defaults to ``samples``.
+        y_samples (int): Use it when you want a different number
+            of samples for y axis. Defaults to ``samples``.
 
     Returns:
-        X, Y, Z (np.array): 3 matrices of the same size, i.e. of size
-        ``(x_samples, y_samples)``.
+        X, Y, Z (numpy.ndarray): 3 matrices of the same size, i.e. of size
+        ``(y_samples, x_samples)``.
 
-        **X** (np.array): :math:`X_{ij}` contains the x coordinate of each\
-            :math:`Z_{ij}` value. All the rows in a column contains the\
-            same number.
+        **X** (numpy.ndarray): :math:`X_{ij}` contains the x coordinate used\
+            to compute the :math:`Z_{ij}` value. All the rows in a column\
+            contains the same number.
 
-        **Y** (np.array): :math:`Y_{ij}` contains the y coordinate of each\
-            :math:`Z_{ij}` value. All the columns in a row contains the\
-            same number.
+        **Y** (numpy.ndarray): :math:`Y_{ij}` contains the y coordinate used\
+            to compute the :math:`Z_{ij}` value. All the columns in a row\
+            contains the same number.
 
-        **Z** (np.array): result of appliying ``f`` on
-            :math:`(X_{ij}, Y_{ij})` coordinates. In other words
+        **Z** (numpy.ndarray): result of appliying ``f`` on\
+            :math:`(X_{ij}, Y_{ij})` coordinates. In other words\
             ``Z[i, j] = f(X[i, j], Y[i, j])``.
 
     Raises:
-        ValueError: if ``len`` of ``bounds`` is not 4.
+        ValueError: if `len` of `limits` is not 4.
 
     Example:
         .. code-block:: python
@@ -118,11 +144,13 @@ def predict_area(model, bounds=[-1, 1, -1, 1], samples=50,
             X, Y, Z = grid_function(fun)
     """
     # Check parameters.
-    if len(bounds) != 4:
-        raise ValueError("bounds need 4 values: [xmin, xmax, ymin, ymax]")
+    if not limits:
+        limits = [-1, 1, -1, 1]
+    elif len(limits) != 4:
+        raise ValueError("limits need 4 values: [xmin, xmax, ymin, ymax]")
     # Create linspaces and matrices with the x and y coordinates.
-    x = np.linspace(bounds[0], bounds[1], num=x_samples or samples)
-    y = np.linspace(bounds[2], bounds[3], num=y_samples or samples)
+    x = np.linspace(limits[0], limits[1], num=x_samples or samples)
+    y = np.linspace(limits[2], limits[3], num=y_samples or samples)
     X, Y = np.meshgrid(x, y)
     # Transforms the grids values to a matrix with two columns:
     # the first are the x coordinates, the second are the y coordinates.
@@ -142,31 +170,29 @@ def grid_function(f, bounds=[-1, 1, -1, 1], samples=50,
         f (function): Function to be applied on each sample of the rectangular
             area. The function must receive two matrix by parameter: one with
             x coordinates an another with y coordinates.
-
-    Keyword Args:
-        bounds (array): Position and dimension of the rectangular area.
-            Indicated by an array of the form [xmin, xmax, ymin, ymax].
-            Defaults to `[-1, 1, -1, 1]`.
+        bounds (list): Position and dimension of the rectangular area.
+            Indicated by a list of the form [xmin, xmax, ymin, ymax].
+            Defaults to ``[-1, 1, -1, 1]``.
         samples (int): number of x and y samples to be used. The more
             samples, the more precision. Defaults to 50.
         x_samples (int): Use it when you want a different number
-            of samples for x axis. Defaults to `samples`.
+            of samples for x axis. Defaults to ``samples``.
         y_samples (int): Use it when you want a different number
-            of samples for y axis. Defaults to `samples`.
+            of samples for y axis. Defaults to ``samples``.
 
     Returns:
-        X, Y, Z (np.array): 3 matrices of the same size, i.e. of size
+        X, Y, Z (numpy.ndarray): 3 matrices of the same size, i.e. of size
         ``(y_samples, x_samples)``.
 
-        **X** (np.array): :math:`X_{ij}` contains the x coordinate used\
+        **X** (numpy.ndarray): :math:`X_{ij}` contains the x coordinate used\
             to compute the :math:`Z_{ij}` value. All the rows in a column\
             contains the same number.
 
-        **Y** (np.array): :math:`Y_{ij}` contains the y coordinate used\
+        **Y** (numpy.ndarray): :math:`Y_{ij}` contains the y coordinate used\
             to compute the :math:`Z_{ij}` value. All the columns in a row\
             contains the same number.
 
-        **Z** (np.array): result of appliying `f` on\
+        **Z** (numpy.ndarray): result of appliying `f` on\
             :math:`(X_{ij}, Y_{ij})` coordinates. In other words\
             ``Z[i, j] = f(X[i, j], Y[i, j])``.
 
@@ -255,7 +281,7 @@ def pcolor(fig, f, bounds=[-1, 1, -1, 1], cmap=cm.coolwarm, samples=50,
     #return fig.pcolor(X, Y, Z, cmap=cmap, vmin=-1, vmax=+1)
     return fig.pcolormesh(X, Y, Z, cmap=cmap, vmin=-1, vmax=+1)
 
-def plot(dataset, fig=plt, marker='o', s=50, linewidth=0.25):
+def plot(dataset, fig=plt, autoscale=True, **kwargs):
     """Plot a dataset.
 
     Warning:
@@ -269,11 +295,78 @@ def plot(dataset, fig=plt, marker='o', s=50, linewidth=0.25):
         to avoid it.
 
     """
+    ax = plt.gca()
+    ax.set_autoscale_on(autoscale)
+
     classes = dataset.Y.flatten().astype(int)
     classes[classes == -1] = 0
-    return fig.scatter(dataset.X[:, 0], dataset.X[:, 1],
-                       c=classes_colors[theme][classes], s=s,
-                       linewidth=linewidth, marker=marker, zorder=10)
+    scatter = fig.scatter(dataset.X[:, 0], dataset.X[:, 1],
+                          c=classes_colors[theme][classes],
+                          zorder=10,
+                          **scatter_prop)
+    plt.margins(x=0., y=0.)
+    return scatter
+
+def binary_ones(X, Y, Z, **kwargs):
+    """Print the Z matrix assuming that contains numbers between -1 and 1.
+
+    Keyword Arguments:
+        autoscale (boolean): Defaults to True.
+        colors (list): 2 colors, first to the -1 class, second to the
+            +1 class. Defaults to lighted color classes 0 and 1.
+        contours (boolean): Plot contour lines. Defaults to True.
+
+    """
+    autoscale = kwargs.get('autoscale', True)
+    colors = kwargs.get('colors', binary_ones_colors)
+
+    ax = plt.gca()
+    ax.set_autoscale_on(autoscale)
+
+    plt.margins(x=0., y=0.)
+    plt.contourf(X, Y, Z, [-1, 0, 1], colors=colors,
+            origin='lower', extend='both')
+    if kwargs.get('contours', True):
+        plt.contour(X, Y, Z, [0,], linewidths=3, colors='#000000')
+
+def binary_margins(X, Y, Z, **kwargs):
+    """Print the Z matrix assuming that contains real numbers
+    of two classes: positive and negative.
+
+    Between -1 and 1 uses lighters colors that represents the margin.
+
+    Keyword Arguments:
+        autoscale (boolean): Adapt the plot view to the values of the
+            matrices ``X`` and ``Y``. Defaults to True.
+        colors (list): 4 colors, first to the confident -1 class,
+            second to the margin of the -1 class, third the margin
+            of the +1 class and fourth the confident +1 class.
+            Defaults to lighted colors for classes 0 and 1.
+        contours (boolean): Plot contour lines. Defaults to True.
+
+    """
+    autoscale = kwargs.get('autoscale', True)
+    colors = kwargs.get('colors', binary_margin_colors)
+    levels = [-1.1, -1, 0, 1, 1.1]
+
+    ax = plt.gca()
+    ax.set_autoscale_on(autoscale)
+
+    plt.margins(x=0., y=0.)
+    plt.contourf(X, Y, Z, levels, colors=colors,
+            origin='lower', extend='both')
+    if kwargs.get('contours', True):
+        plt.contour(X, Y, Z, [-1, 1], linewidths=1.5, colors='#000000',
+                    linestyles='dashed', headwidth=10)
+        plt.contour(X, Y, Z, [0,], linewidths=3, colors='#000000')
+
+def model_binary_ones(model, **kwargs):
+    X, Y, Z = predict_area(model, **kwargs)
+    binary_ones(X, Y, Z, **kwargs)
+
+def model_binary_margins(model, **kwargs):
+    X, Y, Z = predict_area(model, **kwargs)
+    binary_margins(X, Y, Z, **kwargs)
 
 def show():
     plt.show()

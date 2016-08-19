@@ -13,7 +13,7 @@ class DataSetCreator(object):
     This class manage *matplotlib* events and store all points in a
     :attr:`happyml.datasets.DataSet` object.
 
-    **Instructions of use**:
+    **Instructions for use**:
 
         Use the **left button** to create points of class 0 and
         the **right button** to create points of class 1.
@@ -62,14 +62,14 @@ class DataSetCreator(object):
                     scatters[0].set_offsets(np.hstack((dataset.X, dataset.Y)))
 
         # Connect matplotlib event handlers.
-        fig.canvas.mpl_connect('button_press_event', self.onclick)
-        fig.canvas.mpl_connect('close_event', self.onclose)
-        fig.canvas.mpl_connect('key_press_event', self.onkeydown)
-        fig.canvas.mpl_connect('pick_event', self.onpick)
+        fig.canvas.mpl_connect('button_press_event', self._onclick)
+        fig.canvas.mpl_connect('close_event', self._onclose)
+        fig.canvas.mpl_connect('key_press_event', self._onkeydown)
+        fig.canvas.mpl_connect('pick_event', self._onpick)
 
         # Save important fields.
-        self.selected_class = None
-        self.scatters = scatters
+        self._selected_class = None
+        self._scatters = scatters
         self.fig = fig
         self.ax = ax
         self.save_plot = args['save_plot'] or False
@@ -79,12 +79,18 @@ class DataSetCreator(object):
 
 
     def getDataSet(self):
+        """Get the dataset object associated to the current plot.
+
+        Returns:
+            dataset (:attr:`happyml.datasets.DataSet`).
+
+        Raises:
+            ValueError: if binary flag is activated but more than 2
+                2 classes were found.
+
+        """
         # Join scatters points on a list.
-        data = []
-        for i, s in enumerate(self.scatters):
-            for x1, x2 in s.get_offsets():
-                data += [[i, x1, x2]]
-        data = np.array(data)
+        data = self.getDataArray()
         # Construct dataset object.
         dataset = datasets.DataSet()
         if data.shape[0] > 0:
@@ -110,6 +116,22 @@ class DataSetCreator(object):
 
         return dataset
 
+    def getDataArray(self):
+        """Return an numpy array with all the data in the plot.
+
+        This method does not check if the data meets all the required
+        properties (like no regression, binary, ...).
+
+        Returns:
+            data (numpy.ndarray): The first column is the target value.
+
+        """
+        data = []
+        for i, s in enumerate(self._scatters):
+            for x1, x2 in s.get_offsets():
+                data += [[i, x1, x2]]
+        data = np.array(data)
+
     def show(self):
         """Show interactive plot and wait until close."""
         plt.show()
@@ -117,21 +139,26 @@ class DataSetCreator(object):
     def _onkeydown(self, event):
         key = ord(event.key[0]) - ord('0')
         if 0 <= key <= 9:
-            self.selected_class = key
+            self._selected_class = key
 
     def _onclick(self, event):
         button = 0 if event.button == 1 else \
                  1 if event.button == 3 else None
         x, y = event.xdata, event.ydata
-        # If not wheel button (if not delete) and clicked inside the axes (coordinates are not nan).
+        # If not wheel button (if not delete) and clicked inside
+        # the axes (coordinates are not nan).
         if button is not None and (x is not None and y is not None):
-            class_number = self.selected_class if self.selected_class else button
+            class_number = self._selected_class if self._selected_class \
+                           else button
             self._add_point(class_number, [x, y])
             plt.draw()
 
     def _onclose(self, event):
-        """Saves an image of the dataset plot before exit."""
-        # Save image.
+        """Called when the plot is closed.
+
+        Save an image of the dataset plot before exit.
+
+        """
         if self.save_plot:
             self.fig.savefig(self.save_plot)
 
@@ -143,7 +170,7 @@ class DataSetCreator(object):
 
     def _add_point(self, class_number, point):
         """Add point to the given class."""
-        scatter = self.scatters[class_number]
+        scatter = self._scatters[class_number]
         points = scatter.get_offsets()
         points = np.append(points, point[0:2])
         scatter.set_offsets(points)
