@@ -130,7 +130,8 @@ class DataSetCreator(object):
         for i, s in enumerate(self._scatters):
             for x1, x2 in s.get_offsets():
                 data += [[i, x1, x2]]
-        data = np.array(data)
+
+        return np.array(data)
 
     def show(self):
         """Show interactive plot and wait until close."""
