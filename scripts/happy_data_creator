@@ -43,12 +43,18 @@ parser.add_argument('-s', '--save-plot', dest='save_plot', default=False, metava
                     help='Save plot on a image file before closing.')
 parser.add_argument('-d', '--dataset', dest='dataset', default=False, metavar='DATASET_FILE',
                     help='Load the given dataset.')
+parser.add_argument('-p', '--numpy', dest='numpy', action='store_true',
+                    help='Prints the dataset as two numpy arrays for an easy copy&paste'
+                         'to any source file. It does not work with more than 1000 points.')
 args = parser.parse_args()
 
 
-def printDataSet(dataset):
-    """Save the dataset to the stdout file, i.e., prints the dataset."""
-    datasets.save(sys.stdout, dataset)
+def print_dataset(dataset):
+    """Print the dataset in the required format (numpy or csv)."""
+    if args.numpy:
+        datasets.show_numpy(dataset)
+    else:
+        datasets.show(dataset)
 
 
 def main():
@@ -58,8 +64,8 @@ def main():
     dic_args = vars(args)
     creator = DataSetCreator(**dic_args)
     creator.show()
-    dataset = creator.getDataSet()
-    printDataSet(dataset)
+    dataset = creator.get_dataset()
+    print_dataset(dataset)
 
 
 if __name__ == "__main__":

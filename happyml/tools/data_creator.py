@@ -35,7 +35,7 @@ class DataSetCreator(object):
 
             creator = DataSetCreator()
             creator.show()  # show interactive plot and wait until close
-            dataset = creator.getDataSet()  # obtain DataSet object
+            dataset = creator.get_dataset()  # obtain DataSet object
 
     """
 
@@ -78,7 +78,7 @@ class DataSetCreator(object):
         self.binary = args.get('binary') or self.ones
 
 
-    def getDataSet(self):
+    def get_dataset(self):
         """Get the dataset object associated to the current plot.
 
         Returns:
@@ -90,7 +90,7 @@ class DataSetCreator(object):
 
         """
         # Join scatters points on a list.
-        data = self.getDataArray()
+        data = self.get_data_array()
         # Construct dataset object.
         dataset = datasets.DataSet()
         if data.shape[0] > 0:
@@ -116,7 +116,7 @@ class DataSetCreator(object):
 
         return dataset
 
-    def getDataArray(self):
+    def get_data_array(self):
         """Return an numpy array with all the data in the plot.
 
         This method does not check if the data meets all the required

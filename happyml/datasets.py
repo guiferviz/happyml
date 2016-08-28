@@ -82,10 +82,10 @@ def save(file, dataset, delimiter=",", header="", footer=""):
     np.savetxt(file, data, delimiter=delimiter, header=header, footer=footer)
 
 
-def print(dataset, delimiter=","):
+def show(dataset, delimiter=","):
     save(sys.stdout, dataset, delimiter=delimiter)
 
 
-def print_numpy(dataset):
+def show_numpy(dataset):
     sys.stdout.write("X = np.%s\n" % repr(dataset.X))
     sys.stdout.write("Y = np.%s\n" % repr(dataset.Y))
