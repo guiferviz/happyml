@@ -1,4 +1,7 @@
 
+
+import sys
+
 import numpy as np
 
 from happyml.utils import one_hot
@@ -77,3 +80,12 @@ def load_from_stream(stream, delimiter=",", n_outputs=1,
 def save(file, dataset, delimiter=",", header="", footer=""):
     data = np.column_stack((dataset.Y, dataset.X))
     np.savetxt(file, data, delimiter=delimiter, header=header, footer=footer)
+
+
+def print(dataset, delimiter=","):
+    save(sys.stdout, dataset, delimiter=delimiter)
+
+
+def print_numpy(dataset):
+    sys.stdout.write("X = np.%s\n" % repr(dataset.X))
+    sys.stdout.write("Y = np.%s\n" % repr(dataset.Y))
