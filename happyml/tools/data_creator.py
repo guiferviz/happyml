@@ -98,11 +98,11 @@ class DataSetCreator(object):
             classes = np.unique(data[:, 0])  # The sorted unique classes
             if len(classes) == 1 and not self.no_regression and not self.binary:
                 # If only one class it is regression data.
-                dataset.X = data[:, 1].reshape(-1, 1)
-                dataset.Y = data[:, 2].reshape(-1, 1)
+                dataset.X = np.atleast_2d(data[:, 1])
+                dataset.Y = np.atleast_2d(data[:, 2])
             else:
                 dataset.X = data[:, 1:3]
-                dataset.Y = data[:, 0].reshape(-1, 1)
+                dataset.Y = np.atleast_2d(data[:, 0])
 
             if self.binary:
                 if len(classes) <= 2:
