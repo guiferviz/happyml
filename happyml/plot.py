@@ -11,25 +11,8 @@ from matplotlib.colors import hex2color
 from matplotlib.colors import rgb2hex
 from matplotlib.colors import LinearSegmentedColormap
 
+import happyml
 
-theme = "set1"
-
-classes_colors = {
-    "set1" : np.array(["#e41a1c", "#377eb8",
-                       "#4daf4a", "#984ea3",
-                       "#ff7f00", "#ffff33",
-                       "#a65628", "#f781bf",
-                       "#999999", "#000000"]),
-    "set2" : ["#66c2a5", "#fc8d62",
-              "#8da0cb", "#e78ac3",
-              "#a6d854", "#ffd92f",
-              "#e5c494", "#b3b3b3"],
-}
-
-classes_markers = {
-    "set1" : np.array(['o'] * 10),
-    "set2" : np.array(['o'] * 10),
-}
 
 rgb_colors = {
     "set1" : np.array([
@@ -44,12 +27,6 @@ rgb_colors = {
         (0.6, 0.6, 0.6),
         (0.0, 0.0, 0.0)]),
     "set2" : np.array([]),
-}
-
-scatter_prop = {
-    's': 50,
-    'linewidth': 0.25,
-    'marker': 'o'
 }
 
 cdict  = {'red':   ((0.0, 1.0, 1.0),
@@ -71,21 +48,57 @@ blue_red = LinearSegmentedColormap('BlueRed', cdict)
 plt.register_cmap(cmap=blue_red)
 
 
+def get_theme(prop=None):
+    name_theme = happyml.config["theme"]
+
+    if prop:
+        return happyml.config["themes"][name_theme][prop]
+
+    return happyml.config["themes"][name_theme]
+
+
 def get_class_color(n_class, format="hex"):
-    if "hex" in format:
-        return classes_colors[theme][n_class]
+    """Return the color of the spedified class.
 
-    return tuple(rgb_colors[theme][n_class])  # rgb format
+    This function lookup the theme colors table and
+    returns the color of the selected class.
+
+    Args:
+        n_class (number): Number from 1 to 10 or -1.
+        format (string): hex or rgb.
+
+    Return:
+        a string if format = "hex" or rgb-tuple if
+        format = "rgb".
+
+    Raise:
+        ValueError if you provide and unknow format.
+
+    """
+    hex_color = get_theme("colors")[n_class]
+
+    if format.lower() == "hex":
+        return hex_color
+    elif format.lower() == "rgb":
+        return hex2color(hex_color)
+    else:
+        ValueError("Unknow format, use 'hex' or 'rgb'")
 
 
-def light_hex_color(color_hex, light=0.1):
+def light_hex_color(color_hex, light=0.2):
     rgb = hex2color(color_hex)
-    light_rgb = [i + light if i + light <= 1 else 1 for i in rgb]
-    return rgb2hex(light_rgb)
+    rgb = light_rgb_color(rgb, light=light)
+    return rgb2hex(rgb)
+
+
+def light_rgb_color(color, light=0.2):
+    rgb = [i + light if i + light <= 1 else 1 for i in color]
+    return tuple(rgb)
+
 
 binary_ones_colors = (
-    light_hex_color(get_class_color(0), light=0.25),
-    light_hex_color(get_class_color(1), light=0.25),
+    light_hex_color(get_class_color(0), light=0.3),
+    light_hex_color(get_class_color(1), light=0.3),
 )
 
 binary_margin_colors = (
@@ -281,31 +294,64 @@ def pcolor(fig, f, bounds=[-1, 1, -1, 1], cmap=cm.coolwarm, samples=50,
     #return fig.pcolor(X, Y, Z, cmap=cmap, vmin=-1, vmax=+1)
     return fig.pcolormesh(X, Y, Z, cmap=cmap, vmin=-1, vmax=+1)
 
-def plot(dataset, fig=plt, autoscale=True, **kwargs):
-    """Plot a dataset.
 
-    Warning:
-        This function changes the scale of the plot. Use something
-        like
-        ::
+def dataset(dataset, colors=None, markers=None,
+            linewidth=None, size=None, margin=0, return_all=False):
+    """Draw a classification dataset object.
 
-            ax = plt.gca()
-            ax.set_autoscale_on(False)
-
-        to avoid it.
+    Args:
+        dataset (:attr:`happyml.datasets.DataSet`): Dataset object.
+        colors (list or tuple):
+        markers (number, list or tuple):
+        linewidth (number, list or tuple):
+        size (number, list or tuple):
+        margin (number):
+        return_all (boolean): Returns all painted matplotlib objects
+            (one per class) although there is no sample of that
+            class the dataset. Defaults to False.
 
     """
-    ax = plt.gca()
-    ax.set_autoscale_on(autoscale)
+    # Default params.
+    theme = get_theme()
+    colors = colors or theme["colors"]
+    if isinstance(markers, (int, float)):
+        markers = [markers] * 2
+    else:
+        markers = markers or theme["markers"]
+    if isinstance(linewidth, (int, float)):
+        linewidth = [linewidth] * 2
+    else:
+        linewidth = linewidth or theme["linewidth"]
+    if isinstance(size, (int, float)):
+        size = [size] * 2
+    else:
+        size = size or theme["size"]
 
     classes = dataset.Y.flatten().astype(int)
     classes[classes == -1] = 0
-    scatter = fig.scatter(dataset.X[:, 0], dataset.X[:, 1],
-                          c=classes_colors[theme][classes],
-                          zorder=10,
-                          **scatter_prop)
-    plt.margins(x=0., y=0.)
-    return scatter
+    
+    scatters = []
+    for i, c in enumerate(range(10)):
+        idx = classes == c
+        # plt.scatter per class. This allows us using a different
+        # marker per class.
+        options = {
+            "zorder": 10 + i,
+            "c": colors[i],
+            "s": size[i],
+            "linewidth": linewidth[i],
+            "marker": markers[i],
+            "picker": True,
+        }
+        if idx.any():
+            scatters += [plt.scatter(dataset.X[idx, 0], dataset.X[idx, 1],
+                                     **options)]
+        elif return_all:
+            scatters += [plt.scatter([], [], **options)]
+    plt.margins(x=margin, y=margin)
+    # Return all the painted objects.
+    return scatters
+
 
 def binary_ones(X, Y, Z, **kwargs):
     """Print the Z matrix assuming that contains numbers between -1 and 1.
@@ -323,11 +369,12 @@ def binary_ones(X, Y, Z, **kwargs):
     ax = plt.gca()
     ax.set_autoscale_on(autoscale)
 
-    plt.margins(x=0., y=0.)
-    plt.contourf(X, Y, Z, [-1, 0, 1], colors=colors,
+    ax.margins(x=0., y=0.)
+    ax.contourf(X, Y, Z, [-1, 0, 1], colors=colors,
             origin='lower', extend='both')
     if kwargs.get('contours', True):
-        plt.contour(X, Y, Z, [0,], linewidths=3, colors='#000000')
+        ax.contour(X, Y, Z, [0,], linewidths=3, colors='#000000')
+
 
 def binary_margins(X, Y, Z, **kwargs):
     """Print the Z matrix assuming that contains real numbers
@@ -360,7 +407,8 @@ def binary_margins(X, Y, Z, **kwargs):
                     linestyles='dashed', headwidth=10)
         plt.contour(X, Y, Z, [0,], linewidths=3, colors='#000000')
 
-def model_binary_ones(model, **kwargs):
+def model_binary_ones(model, data=None, **kwargs):
+    if dataset is not None: dataset(data)
     X, Y, Z = predict_area(model, **kwargs)
     binary_ones(X, Y, Z, **kwargs)
 

@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from happyml import plot
-from happyml import datasets
+from happyml.datasets import DataSet
 
 
 class DataSetCreator(object):
@@ -48,9 +48,7 @@ class DataSetCreator(object):
         ax.set_ylim(args['limits'][2:4])
         ax.yaxis.grid()
         ax.xaxis.grid()
-        scatters = [ax.scatter([], [], c=plot.get_class_color(i), s=50,
-                               linewidth=0.25, picker=5)
-                    for i in range(10)]
+        scatters = plot.dataset(DataSet(), return_all=True)
         if args['dataset']:
             dataset = args['dataset']
             if dataset.get_N() > 0 and dataset.get_k() == 1:
@@ -92,17 +90,17 @@ class DataSetCreator(object):
         # Join scatters points on a list.
         data = self.get_data_array()
         # Construct dataset object.
-        dataset = datasets.DataSet()
+        dataset = DataSet()
         if data.shape[0] > 0:
             # Check if is a classification or regression dataset.
             classes = np.unique(data[:, 0])  # The sorted unique classes
             if len(classes) == 1 and not self.no_regression and not self.binary:
                 # If only one class it is regression data.
-                dataset.X = np.atleast_2d(data[:, 1])
-                dataset.Y = np.atleast_2d(data[:, 2])
+                dataset.X = data[:, 1].reshape(-1, 1)
+                dataset.Y = data[:, 2].reshape(-1, 1)
             else:
                 dataset.X = data[:, 1:3]
-                dataset.Y = np.atleast_2d(data[:, 0])
+                dataset.Y = data[:, 0].reshape(-1, 1)
 
             if self.binary:
                 if len(classes) <= 2:

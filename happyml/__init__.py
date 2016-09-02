@@ -20,4 +20,4 @@ def greet():
     print "Those about to learn we salute you :)"
 
 
-options, config_files_used = read_config()
+config, config_files_used = read_config()
