@@ -6,9 +6,9 @@ GitHub: https://github.com/guiferviz/happyml-py
 
 
 from config import read_config
+from _version import __version__
 
 
-__version__ = "0.0.5"
 __author__  = "guiferviz"
 
 

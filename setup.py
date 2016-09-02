@@ -11,7 +11,9 @@ from os.path import join
 
 from setuptools import setup
 
-from happyml import __version__
+
+# Creates a __version__ variable.
+exec(open("happyml/_version.py").read())
 
 
 # Install all files under scripts dir.
