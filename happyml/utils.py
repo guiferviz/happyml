@@ -16,8 +16,11 @@ def count_equals(v1, v2):
         Number of equal elements.
 
     """
-    if v1.ndim != 1 or v2.ndim != 1:
-        raise ValueError("count_equals expect two vectors")
+    if v1.ndim != 1:
+        v1 = v1.flatten()
+    if v2.ndim != 1:
+        v2 = v2.flatten()
+
     return np.count_nonzero(v1 == v2)
 
 
