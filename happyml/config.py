@@ -23,15 +23,15 @@ DEFAULT_CONFIG = {
         "default": {
             "colors": ["#ff5a5a", "#5c5cff", "#4daf4a", "#984ea3", "#ff7f00",
                        "#ffff33", "#a65628", "#f781bf", "#999999", "#000000"],
-            "markers": ["x", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-            "linewidth": [3, 0.25, 0.25, 0.25, 0.25,
+            "markers": ["x", "o", "*", "+", "h", "s", "8", "p", "D", "o"],
+            "linewidth": [3, 0.25, 0.25, 3, 0.25,
                           0.25, 0.25, 0.25, 0.25, 0.25],
-            "size": [60, 50, 50, 50, 50, 50, 50, 50, 50, 50],
+            "size": [60, 50, 100, 100, 50, 50, 50, 50, 50, 50],
         },
         "set2": {
             "colors": ["#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854",
                        "#ffd92f", "#e5c494", "#b3b3b3", "#999999", "#000000"],
-            "markers": ["x", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
+            "markers": ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
             "linewidth": [0.25, 0.25, 0.25, 0.25, 0.25,
                           0.25, 0.25, 0.25, 0.25, 0.25],
             "size": [50, 50, 50, 50, 50, 50, 50, 50, 50, 50],
@@ -77,9 +77,14 @@ def happyml_config_files():
 def read_config_file(filename):
     """Read a config file.
 
+    If the config file has an invalid syntax or does
+    not exists ``None`` is returned.
+
+    If there is an error in the configuration file
+    a warning is shown.
+
     Return:
-        dictionary: Dict with all pairs key-value
-        in file. Every value is a string.
+        dictionary or ``None``.
 
     """
     dic = None
