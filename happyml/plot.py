@@ -321,9 +321,9 @@ def prepare_plot(limits=None, scaled=False, autoscale=True,
     """Set basic properties of the matplotlib plot."""
     ax = plt.gca()
 
-    ax.set_autoscale_on(autoscale)
-
     if scaled: ax.axis('scaled')
+
+    if autoscale is not None: ax.set_autoscale_on(autoscale)
 
     if margin is not None:
         margin_x = margin_x or margin
