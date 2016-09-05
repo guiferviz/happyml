@@ -389,42 +389,47 @@ def dataset(dataset, colors=None, markers=None, alpha=1,
     """
     # Default params.
     theme = get_theme()
+    if isinstance(colors, str):
+        colors = [colors]
     colors = colors or theme["colors"]
     if isinstance(markers, (int, float)):
-        markers = [markers] * MAX_CLASS_NUMBER
-    else:
-        markers = markers or theme["markers"]
+        markers = [markers]
+    markers = markers or theme["markers"]
     if isinstance(linewidth, (int, float)):
-        linewidth = [linewidth] * MAX_CLASS_NUMBER
-    else:
-        linewidth = linewidth or theme["linewidth"]
+        linewidth = [linewidth]
+    linewidth = linewidth or theme["linewidth"]
     if isinstance(size, (int, float)):
-        size = [size] * MAX_CLASS_NUMBER
-    else:
-        size = size or theme["size"]
+        size = [size]
+    size = size or theme["size"]
     if isinstance(alpha, (int, float)):
-        alpha = [alpha] * MAX_CLASS_NUMBER
-    else:
-        alpha = alpha or theme["alpha"]
+        alpha = [alpha]
+    alpha = alpha or theme["alpha"]
 
     classes = dataset.Y.flatten().astype(int)
-    classes[classes == -1] = 0
+    classes[classes < 0] = 0
+    unique_classes = np.unique(classes)
+    if return_all:
+        # FIXME: limited class to plot.
+        # Transform return_all to return_at_least
+        # that contains the number of classes the user
+        # want to receive.
+        unique_classes = range(MAX_CLASS_NUMBER)
     
     scatters = []
-    for i, c in enumerate(range(MAX_CLASS_NUMBER)):
+    for c in unique_classes:
         idx = classes == c
         # plt.scatter per class. This allows us using a different
         # options per class.
         options = {
-            "zorder": 10 + i,
-            "c": colors[i],
-            "s": size[i],
-            "linewidth": linewidth[i],
-            "marker": markers[i],
+            "zorder": 10 + c,
+            "c": colors[c % len(colors)],
+            "s": size[c % len(size)],
+            "linewidth": linewidth[c % len(linewidth)],
+            "marker": markers[c % len(markers)],
+            "alpha": alpha[c % len(alpha)],
             "picker": True,
-            "alpha": alpha[i],
         }
-        if idx.any():
+        if np.any(idx):
             scatters += [plt.scatter(dataset.X[idx, 0], dataset.X[idx, 1],
                                      **options)]
         elif return_all:
