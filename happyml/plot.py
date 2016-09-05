@@ -118,9 +118,9 @@ def light_rgb_color(color, light=0.2):
     return tuple(rgb)
 
 
-def get_binary_ones_area_colors():
-    return (light_hex_color(get_class_color(0), light=0.3),
-            light_hex_color(get_class_color(1), light=0.3))
+def get_binary_ones_area_colors(classes):
+    return (light_hex_color(get_class_color(classes[0]), light=0.3),
+            light_hex_color(get_class_color(classes[1]), light=0.3))
 
 
 def get_binary_margin_area_colors():
@@ -318,7 +318,9 @@ def pcolor(fig, f, bounds=[-1, 1, -1, 1], cmap=cm.coolwarm, samples=50,
 
 def prepare_plot(limits=None, scaled=True, autoscale=True,
                  margin=0, margin_x=None, margin_y=None,
-                 grid=False, grid_x=None, grid_y=None):
+                 grid=False, grid_x=None, grid_y=None,
+                 ticks=True, xlabel=None, ylabel=None,
+                 label_size=None, title=None, title_size=None):
     """Set basic properties of the matplotlib plot."""
     ax = plt.gca()
 
@@ -344,6 +346,28 @@ def prepare_plot(limits=None, scaled=True, autoscale=True,
         ax.yaxis.grid()
     if grid or grid_x:
         ax.xaxis.grid()
+
+    if not ticks:
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    if xlabel is not None:
+        if label_size is not None:
+            ax.set_xlabel(xlabel, fontsize=label_size)
+        else:
+            ax.set_xlabel(xlabel)
+
+    if ylabel is not None:
+        if label_size is not None:
+            ax.set_ylabel(ylabel, fontsize=label_size)
+        else:
+            ax.set_ylabel(ylabel)
+
+    if title is not None:
+        if title_size is not None:
+            ax.set_title(title, fontsize=label_size)
+        else:
+            ax.set_title(title)
 
 
 def dataset(dataset, colors=None, markers=None, alpha=1,
@@ -411,7 +435,7 @@ def dataset(dataset, colors=None, markers=None, alpha=1,
     return scatters
 
 
-def binary_ones(X, Y, Z, fill=True, colors=None,
+def binary_ones(X, Y, Z, fill=True, colors=None, class_colors=None,
                 contour=True, contour_width=3, contour_color=None,
                 **kwargs):
     """Paint the Z matrix using two colors, one for the positive
@@ -430,6 +454,8 @@ def binary_ones(X, Y, Z, fill=True, colors=None,
             areas. Defaults to True.
         colors (list): 2 colors, first to the -1 class, second to the
             +1 class. Defaults to lighted color classes 0 and 1.
+        class_colors (list): 2 class numbers. Lighted colors of this
+            2 classes will be used. Defaults to [0, 1].
         contour (boolean): Plot a contour line between positive
             and negative numbers. Defaults to True.
         contour_width (number): Width of the contour line.
@@ -441,7 +467,8 @@ def binary_ones(X, Y, Z, fill=True, colors=None,
         :attr:`happyml.plot.prepare_plot`
 
     """
-    colors = colors or get_binary_ones_area_colors()
+    class_colors = class_colors or [0, 1]
+    colors = colors or get_binary_ones_area_colors(class_colors)
     contour_color = contour_color or "#000000"
 
     prepare_plot(**kwargs)

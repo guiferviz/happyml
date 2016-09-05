@@ -41,25 +41,21 @@ class DataSetCreator(object):
 
     def __init__(self, **args):
         # Make a void plot window.
-        fig, ax = plt.subplots()
-        if not args['no_scaled']:
-            ax.axis('scaled')
-        ax.set_xlim(args['limits'][0:2])
-        ax.set_ylim(args['limits'][2:4])
-        ax.yaxis.grid()
-        ax.xaxis.grid()
-        scatters = plot.dataset(DataSet(), return_all=True)
+        options = {
+            "limits": args["limits"],
+            "grid": True,
+            "scaled": not args["no_scaled"],
+            "return_all": True,
+        }
         if args['dataset']:
             dataset = args['dataset']
             if dataset.get_N() > 0 and dataset.get_k() == 1:
-                if dataset.get_d() == 2:  # Classification dataset.
-                    for i in range(10):
-                        class_i = dataset.Y.flatten() == i
-                        scatters[i].set_offsets(dataset.X[class_i, 0:2])
-                elif dataset.get_d() == 1:  # Regression dataset.
-                    scatters[0].set_offsets(np.hstack((dataset.X, dataset.Y)))
+                scatters = plot.dataset(dataset, **options)
+        else:
+            scatters = plot.dataset(DataSet(), **options)
 
         # Connect matplotlib event handlers.
+        fig = plt.gcf()
         fig.canvas.mpl_connect('button_press_event', self._onclick)
         fig.canvas.mpl_connect('close_event', self._onclose)
         fig.canvas.mpl_connect('key_press_event', self._onkeydown)
@@ -68,8 +64,6 @@ class DataSetCreator(object):
         # Save important fields.
         self._selected_class = None
         self._scatters = scatters
-        self.fig = fig
-        self.ax = ax
         self.save_plot = args['save_plot'] or False
         self.no_regression = args['no_regression'] or False
         self.ones = args.get('ones') or False
@@ -159,7 +153,7 @@ class DataSetCreator(object):
 
         """
         if self.save_plot:
-            self.fig.savefig(self.save_plot)
+            plt.savefig(self.save_plot)
 
     def _onpick(self, event):
         # If picket using wheel
