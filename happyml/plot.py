@@ -316,8 +316,9 @@ def pcolor(fig, f, bounds=[-1, 1, -1, 1], cmap=cm.coolwarm, samples=50,
     return fig.pcolormesh(X, Y, Z, cmap=cmap, vmin=-1, vmax=+1)
 
 
-def prepare_plot(limits=None, scaled=False, autoscale=True,
-                 margin=0, margin_x=None, margin_y=None):
+def prepare_plot(limits=None, scaled=True, autoscale=True,
+                 margin=0, margin_x=None, margin_y=None,
+                 grid=False, grid_x=None, grid_y=None):
     """Set basic properties of the matplotlib plot."""
     ax = plt.gca()
 
@@ -336,6 +337,13 @@ def prepare_plot(limits=None, scaled=False, autoscale=True,
                              "[xmin, xmax, ymin, ymax]")
         ax.set_xlim(limits[0:2])
         ax.set_ylim(limits[2:4])
+
+    grid_x = grid_x or grid
+    grid_y = grid_y or grid
+    if grid or grid_y:
+        ax.yaxis.grid()
+    if grid or grid_x:
+        ax.xaxis.grid()
 
 
 def dataset(dataset, colors=None, markers=None, alpha=1,
