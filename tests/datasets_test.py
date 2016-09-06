@@ -186,3 +186,28 @@ class GetTypeTest(TestCase):
     def test_get_type_bool_2(self):
         y = np.array([[True, False]])
         self.assertEqual(dt.get_type(y), "binary-one-hot")
+
+
+class EquilibrateDataSetTest(TestCase):
+
+    def test_binary_1(self):
+        dataset = dt.DataSet()
+        dataset.X = np.array([[1, 2], [2, 3], [3, 4]])
+        dataset.Y = np.array([[1], [1], [0]])
+        dt.equilibrate_dataset(dataset)
+
+        np.testing.assert_array_equal(dataset.X,
+            np.array([[3, 4], [3, 4], [1, 2], [2, 3]]))
+        np.testing.assert_array_equal(dataset.Y,
+            np.array([[0], [0], [1], [1]]))
+
+    def test_multiclass_1(self):
+        dataset = dt.DataSet()
+        dataset.X = np.array([[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]])
+        dataset.Y = np.array([[1], [1], [0], [2], [2], [2]])
+        dt.equilibrate_dataset(dataset, n=2)
+
+        np.testing.assert_array_equal(dataset.X,
+            np.array([[3, 4], [3, 4], [1, 2], [2, 3], [4, 5], [5, 6]]))
+        np.testing.assert_array_equal(dataset.Y,
+            np.array([[0], [0], [1], [1], [2], [2]]))

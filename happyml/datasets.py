@@ -1,6 +1,8 @@
 
 
+from collections import Counter
 import sys
+from StringIO import StringIO
 
 import numpy as np
 
@@ -50,12 +52,23 @@ class DataSet(object):
         """
         return self.Y.shape[1]
 
+    def get_classes(self, force=False):
+        if force or self._classes is None:
+            self._classes = np.unique(self.Y)
+
+        return self._classes
 
     def get_type(self, force=False):
         if force or self._type is None:
             self._type = get_type(self.Y)
 
         return self._type
+
+    def __str__(self):
+        io = StringIO.StringIO()
+        io.write("DataSet. Type: %s.\n" % self.get_type())
+        save(io, self)
+        return io.getvalue()
 
 
 def load(filename, delimiter="", **kwargs):
@@ -165,3 +178,29 @@ def get_type(y):
     if one_hot:
         return "binary-one-hot"
     return "binary"
+
+
+def equilibrate_dataset(dataset, n=None):
+    dataset_type = dataset.get_type()
+    if dataset_type == "binary" or dataset_type == "multiclass":
+        classes = dataset.get_classes()
+        y = dataset.Y.flatten()
+        counter = Counter(y)
+        count_classes = counter.most_common(len(classes))
+        if n is None:
+            max_class, n = count_classes[0]  # max class number
+        count_classes = dict(count_classes)
+        X = np.empty((0, dataset.get_d()))
+        Y = np.empty((0, dataset.get_k()))
+        for c in classes:
+            idx = y == c
+            to_add = n - count_classes[c]
+            if to_add < 0:
+                _x = dataset.X[idx, :][0:to_add, :]
+                _y = dataset.Y[idx, :][0:to_add, :]
+            else:
+                _x = np.pad(dataset.X[idx, :], ((0, to_add), (0, 0)), "wrap")
+                _y = np.pad(dataset.Y[idx, :], ((0, to_add), (0, 0)), "wrap")
+            X = np.vstack((X, _x))
+            Y = np.vstack((Y, _y))
+        dataset.X, dataset.Y = X, Y
