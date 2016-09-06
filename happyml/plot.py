@@ -36,6 +36,40 @@ blue_red = LinearSegmentedColormap('BlueRed', cdict)
 plt.register_cmap(cmap=blue_red)
 
 
+def get_themes():
+    """Return a list with all the themes names."""
+    themes_names = []
+    for k in happyml.config["themes"].keys():
+        themes_names += [k]
+    return themes_names
+
+
+def set_theme(theme_name):
+    """Safe theme set.
+
+    Performs ``happyml.config["theme"] = theme_name`` after
+    checking that ``theme_name`` is the name of an existing
+    theme.
+
+    Args:
+        theme_name (string): Name of the new theme.
+
+    Raise:
+        ValueError if you provide and unknow theme name.
+
+    See Also:
+        :attr:`happyml.plot.get_themes`
+
+    """
+    list_themes = get_themes()
+    if theme_name not in list_themes:
+        raise ValueError("Unknown theme '%s'. Use one of the following %s"\
+                         " or create your own theme in 'happyml.conf'."
+                         % (theme_name, repr(list_themes)))
+
+    happyml.config["theme"] = theme_name
+
+
 def get_theme(prop=None):
     """Return the current theme dictionary.
 
