@@ -7,6 +7,14 @@ import numpy as np
 from happyml.utils import one_hot
 
 
+DATASET_TYPES = [
+    "unknown",
+    "binary", "binary-one-hot",
+    "multiclass", "multiclass-one-hot", "multiclass-multioutput",
+    "continuous", "continuous-multioutput",
+]
+
+
 class DataSet(object):
     """Generic collection of inputs and outputs.
 
@@ -15,6 +23,10 @@ class DataSet(object):
     X = np.empty((0, 0))
 
     Y = np.empty((0, 0))
+
+    _type = None
+
+    _classes = None
 
 
     def get_N(self):
@@ -37,6 +49,13 @@ class DataSet(object):
         
         """
         return self.Y.shape[1]
+
+
+    def get_type(self, force=False):
+        if force or self._type is None:
+            self._type = get_type(self.Y)
+
+        return self._type
 
 
 def load(filename, delimiter="", **kwargs):
@@ -89,3 +108,60 @@ def show(dataset, delimiter=","):
 def show_numpy(dataset):
     sys.stdout.write("X = np.%s\n" % repr(dataset.X))
     sys.stdout.write("Y = np.%s\n" % repr(dataset.Y))
+
+
+def get_type(y):
+    """Try to guess the type of the numpy array.
+
+    The differents types are:
+    * unknown
+    * binary
+    * binary-one-hot
+    * multiclass
+    * multiclass-one-hot
+    * multiclass-multioutput
+    * continuous
+    * continuous-multioutput
+
+    Arrays with strings are never guessed as *-one-hot.
+
+    This method is inspired by *sklearn.utils.multiclass.type_of_target*.
+
+    """
+    y = np.asarray(y)
+
+    if y.ndim > 2 or y.ndim < 1:
+        return "unknown"
+
+    if y.shape[0] == 0 or (y.ndim == 2 and y.shape[1] == 0):
+        return "unknown"
+
+    multioutput = False
+    if y.ndim == 2 and y.shape[1] > 1:
+        multioutput = True
+
+    if y.dtype == float and np.any(y != y.astype(int)):
+        if multioutput:
+            return "continuous-multioutput"
+        return "continuous"
+
+    classes = np.unique(y)
+
+    one_hot = False
+    if multioutput and len(classes) == 2 and \
+       y.dtype.kind in "biuf" and \
+       0 in classes and 1 in classes and \
+       np.array_equal(np.sum(y, axis=1), np.ones(y.shape[0])):
+        one_hot = True
+
+    if len(classes) > 2 or (multioutput and not (
+                            one_hot and y.shape[1] <= 2)):
+        if multioutput:
+            if one_hot:
+                return "multiclass-one-hot"
+            return "multiclass-multioutput"
+        return "multiclass"
+
+    if one_hot:
+        return "binary-one-hot"
+    return "binary"

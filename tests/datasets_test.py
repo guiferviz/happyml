@@ -87,3 +87,102 @@ class DataSetTest(TestCase):
         self.assertEqual(dataset.get_k(), 3)
         self.assertEqual(dataset.get_d(), 2)
         self.assertEqual(dataset.get_N(), 4)
+
+    def test_dataset_get_type_bool_2(self):
+        dataset = dt.DataSet()
+        self.assertEqual(dataset.get_type(), "unknown")
+
+
+class GetTypeTest(TestCase):
+
+    def test_get_type_binary_1(self):
+        y = np.array([[1], [0], [1]])
+        self.assertEqual(dt.get_type(y), "binary")
+
+    def test_get_type_binary_2(self):
+        y = np.array([[1.0], [0.], [1]])
+        self.assertEqual(dt.get_type(y), "binary")
+
+    def test_get_type_binary_3(self):
+        y = np.array([[1], [-1], [1]])
+        self.assertEqual(dt.get_type(y), "binary")
+
+    def test_get_type_binary_4(self):
+        y = np.array([1, 4, 1])
+        self.assertEqual(dt.get_type(y), "binary")
+
+    def test_get_type_continuous_1(self):
+        y = np.array([1.1, 4, 1])
+        self.assertEqual(dt.get_type(y), "continuous")
+
+    def test_get_type_continuous_2(self):
+        y = np.array([[1.1], [1.1]])
+        self.assertEqual(dt.get_type(y), "continuous")
+
+    def test_get_type_continuous_3(self):
+        y = np.array([[1, 2], [1.1, 2]])
+        self.assertEqual(dt.get_type(y), "continuous-multioutput")
+
+    def test_get_type_unknown_1(self):
+        y = np.array([[[1], [2], [3]]])
+        self.assertEqual(dt.get_type(y), "unknown")
+
+    def test_get_type_unknown_2(self):
+        y = np.empty((23, 0))
+        self.assertEqual(dt.get_type(y), "unknown")
+
+    def test_get_type_unknown_3(self):
+        y = np.empty((0,))
+        self.assertEqual(dt.get_type(y), "unknown")
+
+    def test_get_type_unknown_4(self):
+        y = 9
+        self.assertEqual(dt.get_type(y), "unknown")
+
+    def test_get_type_unknown_5(self):
+        y = self
+        self.assertEqual(dt.get_type(y), "unknown")
+
+    def test_get_type_multiclass_1(self):
+        y = np.array([[1], [2], [3]])
+        self.assertEqual(dt.get_type(y), "multiclass")
+
+    def test_get_type_multiclass_2(self):
+        y = np.array([[1, 2, 1]])
+        self.assertEqual(dt.get_type(y), "multiclass-multioutput")
+
+    def test_get_type_multiclass_3(self):
+        y = np.array([[1, 0, 1]])
+        self.assertEqual(dt.get_type(y), "multiclass-multioutput")
+
+    def test_get_type_multiclass_4(self):
+        y = np.array([[1, 0], [0, 0]])
+        self.assertEqual(dt.get_type(y), "multiclass-multioutput")
+
+    def test_get_type_one_hot_1(self):
+        y = np.array([[1, 0, 0]])
+        self.assertEqual(dt.get_type(y), "multiclass-one-hot")
+
+    def test_get_type_one_hot_3(self):
+        y = np.array([[1, 0]])
+        self.assertEqual(dt.get_type(y), "binary-one-hot")
+
+    def test_get_type_str_1(self):
+        y = np.array(["a", "b", "a"])
+        self.assertEqual(dt.get_type(y), "binary")
+
+    def test_get_type_str_2(self):
+        y = np.array(["a", "b", "c"])
+        self.assertEqual(dt.get_type(y), "multiclass")
+
+    def test_get_type_str_3(self):
+        y = np.array([["a", "b"]])
+        self.assertEqual(dt.get_type(y), "multiclass-multioutput")
+
+    def test_get_type_bool_1(self):
+        y = np.array([True, False])
+        self.assertEqual(dt.get_type(y), "binary")
+
+    def test_get_type_bool_2(self):
+        y = np.array([[True, False]])
+        self.assertEqual(dt.get_type(y), "binary-one-hot")
