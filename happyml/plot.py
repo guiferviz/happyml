@@ -564,8 +564,9 @@ def model_binary_margins(model, data=None, **kwargs):
     binary_margins(X, Y, Z, **kwargs)
 
 
-from models import Perceptron, LinearRegression
+from models import Perceptron, PerceptronKernel, LinearRegression
 Perceptron.plot = model_binary_ones
+PerceptronKernel.plot = model_binary_ones
 LinearRegression.plot = model_binary_ones
 
 from datasets import DataSet
