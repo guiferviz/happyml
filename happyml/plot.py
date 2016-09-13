@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import hex2color
 from matplotlib.colors import rgb2hex
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.image import imread
 
 import happyml
 
@@ -164,6 +165,20 @@ def get_binary_margin_area_colors():
             light_hex_color(get_class_color(1), light=0.3))
 
 
+def predict_1d_area(model, limits=None, samples=50):
+    if not limits:
+        limits = [-1, 1]
+    elif len(limits) != 2:
+        raise ValueError("limits need 2 values: [xmin, xmax]")
+
+    x = np.linspace(limits[0], limits[1], num=samples)
+    x = x.reshape((samples, 1))
+
+    y = model.predict(x)
+
+    return x.flatten(), y
+
+
 def predict_area(model, limits=None, samples=50,
                  x_samples=None, y_samples=None, **kwargs):
     """Evaluate a model on a rectangular area.
@@ -229,6 +244,7 @@ def predict_area(model, limits=None, samples=50,
     Z = predicted.reshape(X.shape)  # or Y.shape
     # Return all the usefull data.
     return X, Y, Z
+
 
 def grid_function(f, bounds=[-1, 1, -1, 1], samples=50,
                   x_samples=None, y_samples=None):
@@ -353,7 +369,7 @@ def pcolor(fig, f, bounds=[-1, 1, -1, 1], cmap=cm.coolwarm, samples=50,
 def prepare_plot(limits=None, scaled=True, autoscale=True,
                  margin=0, margin_x=None, margin_y=None,
                  grid=False, grid_x=None, grid_y=None,
-                 ticks=True, xlabel=None, ylabel=None,
+                 ticks=True, off=False, xlabel=None, ylabel=None,
                  label_size=None, title=None, title_size=None):
     """Set basic properties of the matplotlib plot."""
     ax = plt.gca()
@@ -385,6 +401,9 @@ def prepare_plot(limits=None, scaled=True, autoscale=True,
         ax.set_xticks([])
         ax.set_yticks([])
 
+    if off:
+        ax.axis("off")
+
     if xlabel is not None:
         if label_size is not None:
             ax.set_xlabel(xlabel, fontsize=label_size)
@@ -404,7 +423,15 @@ def prepare_plot(limits=None, scaled=True, autoscale=True,
             ax.set_title(title)
 
 
-def dataset(dataset, colors=None, markers=None, alpha=1,
+def dataset_continuous(dataset, **kwargs):
+    if "continuous" not in dataset.get_type(): return None
+
+    for i in range(dataset.get_k()):
+        plt.scatter(dataset.X[:, i], dataset.Y[:, i])
+    prepare_plot(**kwargs)
+
+
+def dataset(dataset, colors=None, markers=None, alpha=None,
             linewidth=None, size=None, return_all=False, **kwargs):
     """Draw a classification dataset object.
 
@@ -552,6 +579,11 @@ def binary_margins(X, Y, Z, **kwargs):
         plt.contour(X, Y, Z, [0,], linewidths=3, colors='#000000')
 
 
+def plot_line(x, y, **kwargs):
+    plt.plot(x, y)
+    prepare_plot(**kwargs)
+
+
 def model_binary_ones(model, data=None, **kwargs):
     if data is not None: dataset(data)
     X, Y, Z = predict_area(model, **kwargs)
@@ -562,6 +594,14 @@ def model_binary_margins(model, data=None, **kwargs):
     if data is not None: dataset(data)
     X, Y, Z = predict_area(model, **kwargs)
     binary_margins(X, Y, Z, **kwargs)
+
+
+def imshow(img, **kwargs):
+    if type(img) == str:
+        img = imread(img)
+
+    prepare_plot(off=True, **kwargs)
+    plt.imshow(img)
 
 
 from models import Perceptron, PerceptronKernel, LinearRegression
