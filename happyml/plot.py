@@ -640,11 +640,15 @@ def imshow(img, **kwargs):
 
 
 def figure(*args, **kwargs):
-    plt.figure(*args, **kwargs)
+    return plt.figure(*args, **kwargs)
 
 
 def subplot(*args, **kwargs):
-    plt.subplot(*args, **kwargs)
+    return plt.subplot(*args, **kwargs)
+
+
+def suptitle(*args, **kwargs):
+    return plt.suptitle(*args, **kwargs)
 
 
 from models import Perceptron, PerceptronKernel, LinearRegression
@@ -658,4 +662,5 @@ DataSet.plot = dataset
 
 def show():
     plt.tight_layout()
+    plt.subplots_adjust(top=0.85)
     plt.show()
