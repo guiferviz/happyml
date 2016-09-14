@@ -424,19 +424,28 @@ def prepare_plot(limits=None, scaled=True, autoscale=True,
 
 
 def dataset_continuous(dataset, **kwargs):
-    if "continuous" not in dataset.get_type(): return None
+    """Draw a continuous dataset object.
+
+    Args:
+        dataset (:attr:`happyml.datasets.DataSet`): Dataset to draw.
+
+    """
+    if "continuous" not in dataset.get_type() or dataset.get_d() != 1:
+        raise ValueError("Invalid dataset. Expecting a continuous"
+                         " dataset with 1 input dimension")
 
     for i in range(dataset.get_k()):
         plt.scatter(dataset.X[:, i], dataset.Y[:, i])
     prepare_plot(**kwargs)
 
 
-def dataset(dataset, colors=None, markers=None, alpha=None,
-            linewidth=None, size=None, return_all=False, **kwargs):
+def dataset_classification(dataset, colors=None, markers=None,
+                           alpha=None, linewidth=None, size=None,
+                           return_all=False, **kwargs):
     """Draw a classification dataset object.
 
     Args:
-        dataset (:attr:`happyml.datasets.DataSet`): Dataset object.
+        dataset (:attr:`happyml.datasets.DataSet`): Dataset to draw.
         colors (list or tuple):
         markers (number, list or tuple):
         alpha (number, list or tuple): Any value between 1 (totally
@@ -499,6 +508,17 @@ def dataset(dataset, colors=None, markers=None, alpha=None,
     prepare_plot(**kwargs)
     # Return all the painted objects.
     return scatters
+
+
+def dataset(dataset, dtype=None, **kwargs):
+    dtype = dtype or dataset.get_type()
+    if "continuous" in dtype:
+        return dataset_continuous(dataset, **kwargs)
+    elif "binary" in dtype or "multiclass" in dtype:
+        return dataset_classification(dataset, **kwargs)
+    else:
+        raise ValueError("Dataset of type '%s' cannot be plotted" %
+                         dtype)
 
 
 def binary_ones(X, Y, Z, fill=True, colors=None, class_colors=None,
@@ -597,11 +617,34 @@ def model_binary_margins(model, data=None, **kwargs):
 
 
 def imshow(img, **kwargs):
+    """Show an image in a figure.
+
+    Args:
+        img (str or numpy.ndarray):
+
+    Example:
+        .. code-block:: python
+
+            img = imread("myimg.png")
+            imshow(img)
+
+            # The same in one line:
+            imshow("myimg.png")
+
+    """
     if type(img) == str:
         img = imread(img)
 
     prepare_plot(off=True, **kwargs)
     plt.imshow(img)
+
+
+def figure(*args, **kwargs):
+    plt.figure(*args, **kwargs)
+
+
+def subplot(*args, **kwargs):
+    plt.subplot(*args, **kwargs)
 
 
 from models import Perceptron, PerceptronKernel, LinearRegression
@@ -614,4 +657,5 @@ DataSet.plot = dataset
 
 
 def show():
+    plt.tight_layout()
     plt.show()

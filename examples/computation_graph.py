@@ -2,64 +2,70 @@
 
 import numpy as np
 
-from happyml.datasets import DataSet
-from happyml.graphs.core import Input, Parameter
+from happyml import datasets
+from happyml.graphs.core import Input, Parameter, Add, Prod
 from happyml.graphs.viz import graph2dot
-from happyml.graphs.optimize import fit
+from happyml.graphs.optimize import fit, SGD
+from happyml.graphs.loss import LMS
 from happyml import plot
 
 
-# Dataset
-X = np.array([[-0.9375    ],
-       		  [-0.828125  ],
-       		  [-0.6875    ],
-       		  [-0.55208333],
-       		  [-0.50520833],
-       		  [-0.328125  ],
-       		  [-0.24479167],
-       		  [-0.05729167],
-       		  [ 0.04166667],
-       		  [ 0.19791667]])
-Y = np.array([[-0.125     ],
-       		  [-0.00520833],
-       		  [ 0.13020833],
-       		  [ 0.25      ],
-       		  [ 0.38020833],
-       		  [ 0.47395833],
-       		  [ 0.609375  ],
-       		  [ 0.703125  ],
-       		  [ 0.86979167],
-       		  [ 0.98958333]])
-dataset = DataSet()
-dataset.X = X
-dataset.Y = Y
+def plot_all(h, dataset):
+    # Visualize using graphviz.
+    g = graph2dot(h, filename="graph", format="png")
+    g.render()
+    #g.view()
+    plot.figure(figsize=(15, 3))
+    plot.subplot(131)
+    plot.imshow("graph.png", title="Computational Graph")
 
-# Computation graph.
+    # Visualize dataset and initial predictions.
+    plot.subplot(132)
+    dataset.plot()
+    x, y = plot.predict_1d_area(h.to_model())
+    plot.plot_line(x, y, title="Before training",
+                   limits=[-1, 1, -1, 1])
+
+    # Optimize. Provided optimizer and loss are
+    # the default options. You can delete them if you prefer.
+    fit(h, dataset,
+        optimizer=SGD(learning_rate=0.1),
+        loss=LMS(),
+        epochs=50,
+        batch_size=5)
+
+    # Visualize dataset and final predictions.
+    plot.subplot(133)
+    dataset.plot()
+    x, y = plot.predict_1d_area(h.to_model())
+    plot.plot_line(x, y, title="After training",
+                   limits=[-1, 1, -1, 1])
+
+    plot.show()
+
+
+# Dataset
+dataset = datasets.load("parabola.csv")
+
+
+# Linear computation graph.
 x = Input(name="x")
 w = Parameter(name="w")
 b = Parameter(name="b")
 h = w * x + b
 
-# Visualize using graphviz.
-g = graph2dot(h, filename="graph", format="png")
-g.render()
-#g.view()
-img = plot.imread("graph.png")
-print img.shape
-plot.imshow("graph.png", title="Computational Graph")
-plot.show()
+# Plot and fit.
+plot_all(h, dataset)
 
-# Visualize dataset and initial predictions.
-x, y = plot.predict_1d_area(h.to_model())
-plot.plot_line(x, y)
-plot.dataset_continuous(dataset)
-plot.show()
 
-# Optimize.
-fit(h, dataset)
+# Squared computation graph.
+x = Input(name="x")
+w1 = Parameter(name="w1")
+w2 = Parameter(name="w2")
+b = Parameter(name="b")
+h = Add([b, w1 * x, Prod([w2, x, x])])
+# The next line is the same but with more nodes.
+#h = b + w1 * x + w2 * x * x
 
-# Visualize dataset and final predictions.
-x, y = plot.predict_1d_area(h.to_model())
-plot.plot_line(x, y)
-plot.dataset_continuous(dataset)
-plot.show()
+# Plot and fit.
+plot_all(h, dataset)

@@ -52,7 +52,7 @@ class DataSetCreator(object):
             if dataset.get_N() > 0 and dataset.get_k() == 1:
                 scatters = plot.dataset(dataset, **options)
         else:
-            scatters = plot.dataset(DataSet(), **options)
+            scatters = plot.dataset(DataSet(), dtype="multiclass", **options)
 
         # Connect matplotlib event handlers.
         fig = plt.gcf()
