@@ -92,6 +92,12 @@ class DataSetTest(TestCase):
         dataset = dt.DataSet()
         self.assertEqual(dataset.get_type(), "unknown")
 
+    def test_getitem(self):
+        actual_x, actual_y = DATASET01[1]
+        expected_x, expected_y = DATASET01.X[1, :], DATASET01.Y[1, :]
+        np.testing.assert_array_equal(expected_x, actual_x)
+        np.testing.assert_array_equal(expected_y, actual_y)
+
 
 class GetTypeTest(TestCase):
 

@@ -64,6 +64,9 @@ class DataSet(object):
 
         return self._type
 
+    def __getitem__(self, index):
+        return self.X[index, :].T, self.Y[index, :].T
+
     def __str__(self):
         io = StringIO.StringIO()
         io.write("DataSet. Type: %s.\n" % self.get_type())
