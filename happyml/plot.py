@@ -635,7 +635,8 @@ def imshow(img, **kwargs):
     if type(img) == str:
         img = imread(img)
 
-    prepare_plot(off=True, **kwargs)
+    kwargs.setdefault("off", True)
+    prepare_plot(**kwargs)
     plt.imshow(img)
 
 

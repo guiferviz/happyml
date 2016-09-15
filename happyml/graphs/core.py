@@ -41,7 +41,7 @@ class Element(object):
             if i == len(x.inputs):
                 result.append(x)
             else:
-                stack.append((x, i+1))
+                stack.append((x, i + 1))
                 if x.inputs[i] not in visited:
                     stack.append((x.inputs[i], 0))
                     visited.add(x.inputs[i])
@@ -61,6 +61,15 @@ class Element(object):
 
     def __add__(self, o):
         return Add([self, o])
+
+    def __sub__(self, o):
+        return Sub([self, o])
+
+    def __pow__(self, o):
+        if o == 2:
+            return Square(self)
+        raise NotImplementedError()
+        #return Pow(self, o)
 
     def __str__(self):
         if self.name is not None:
@@ -118,7 +127,31 @@ class Add(Element):
                 gradients[i] += gradients[self]
 
     def __str__(self):
-        return " + ".join(str(i) for i in self.inputs)
+        return "(%s)" % " + ".join(str(i) for i in self.inputs)
+
+
+class Sub(Element):
+
+    def __init__(self, inputs, **args):
+        Element.__init__(self, inputs=inputs, name="-", **args)
+
+    def forward(self):
+        it = iter(self.inputs)
+        result = it.next().value
+        for i in it:
+            result -= i.value
+
+        self.value = result
+
+    def backward(self, gradients):
+        grad = 1
+        for i in self.inputs:
+            if i.has_parameter:
+                gradients[i] += grad * gradients[self]
+            grad = -1
+
+    def __str__(self):
+        return "(%s)" % " - ".join(str(i) for i in self.inputs)
 
 
 class Prod(Element):
@@ -142,7 +175,7 @@ class Prod(Element):
                 gradients[i] += val / i.value * gradients[self]
 
     def __str__(self):
-        return " * ".join(str(i) for i in self.inputs)
+        return "(%s)" % " * ".join(str(i) for i in self.inputs)
 
 
 class Dot(Element):
@@ -164,7 +197,24 @@ class Dot(Element):
             							 gradients[self]
 
     def __str__(self):
-        return " . ".join(str(i) for i in self.inputs)
+        return "(%s)" % " . ".join(str(i) for i in self.inputs)
+
+
+class Square(Element):
+
+    def __init__(self, element, **args):
+        Element.__init__(self, inputs=[element], name="^2", **args)
+
+    def forward(self):
+        self.value = np.square(self.inputs[0].value)
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            gradients[element] += 2 * element.value * gradients[self]
+
+    def __str__(self):
+        return "(%s ^ 2)" % str(self.inputs[0])
 
 
 class ComputationalGraphModel(Hypothesis):
@@ -187,9 +237,9 @@ def forward_all(x):
     return x.value
 
 
-def backward_all(x, loss_gradient=1):
+def backward_all(x):
     path = x.get_computation_path()
-    gradients = {x: loss_gradient}
+    gradients = {x: 1}
     for i in path:
         if i.has_parameter:
             gradients.setdefault(i, np.zeros(i.value.shape))
