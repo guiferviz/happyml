@@ -37,13 +37,16 @@ def minimize(loss, dataset, optimizer=None, epochs=10, batch_size=1):
         total_loss = 0
         index = 0
         while index < n:
+            gradients = {}
             for j in range(index, min(n, index + batch_size)):
                 x, y = dataset[idx[j]]
                 inputs[0].set_value(x)
-                if len(inputs) > 1: inputs[1].set_value(y)
+                inputs[1].set_value(y)
                 forward_all(loss)
                 total_loss += loss.value
-                gradients = backward_all(loss)
-                optimizer.update(gradients)
+                backward_all(loss, gradients)
+            for k in gradients:
+                gradients[k] *= 1. / batch_size
+            optimizer.update(gradients)
             index += batch_size
         print "Epoch:", i, "\tLoss:", total_loss

@@ -237,9 +237,11 @@ def forward_all(x):
     return x.value
 
 
-def backward_all(x):
+def backward_all(x, gradients=None):
     path = x.get_computation_path()
-    gradients = {x: 1}
+    gradients = gradients if gradients is not None else {}
+    gradients.setdefault(x, 1)
+
     for i in path:
         if i.has_parameter:
             gradients.setdefault(i, np.zeros(i.value.shape))
@@ -254,3 +256,28 @@ def backward_all(x):
             del gradients[i]
 
     return gradients
+
+
+
+def check_gradients(x, delta=1e-6, threshold=0.01):
+    params = [i for i in x.get_computation_path() if i.is_parameter]
+    forward_all(x)
+    gradients = backward_all(x)
+
+    for param in params:
+        g = np.zeros(param.shape)
+        for i in np.ndindex(param.shape):
+            v = param.value[i]
+            param.value[i] = v - delta
+            val_minus = forward_all(x)
+            param.value[i] = v + delta
+            val_plus = forward_all(x)
+            param.value[i] = v
+            g[i] = (val_plus - val_minus) / (2 * delta)
+        print "----------------------------------------------------"
+        print "param: %s" % str(param)
+        print "gradient (finite difference): %s" % g
+        print "gradient (automatic): %s" % gradients[param]
+        print "error: %s" % ((g-gradients[param])/gradients[param])
+        if not np.allclose(g, gradients[param], rtol=threshold):
+            raise ValueError("gradients do not match")

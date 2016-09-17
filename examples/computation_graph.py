@@ -4,7 +4,7 @@ import numpy as np
 
 from happyml import datasets
 from happyml.graphs.core import Input, Parameter, Add, Prod, Square, \
-                                forward_all
+                                forward_all, check_gradients
 from happyml.graphs.viz import graph2dot
 from happyml.graphs.optimize import minimize, SGD
 from happyml.graphs.loss import LMS
@@ -12,7 +12,7 @@ from happyml import plot
 
 
 def plot_all(h, loss, dataset):
-    # Visualize using graphviz.
+    # Visualize graph using graphviz.
     g = graph2dot(h, filename="graph", format="png")
     g.render()
     #g.view()
@@ -28,12 +28,12 @@ def plot_all(h, loss, dataset):
     plot.plot_line(x, y, title="Before training",
                    limits=[-1, 1, -1, 1])
 
-    # Optimize. Provided optimizer and loss are
-    # the default options. You can delete them if you prefer.
+    # Provided SGD optimizer is the default option.
+    # You can delete it if you prefer.
     minimize(loss, dataset,
              optimizer=SGD(learning_rate=0.1),
-             epochs=50,
-             batch_size=5)
+             epochs=10,
+             batch_size=1)#dataset.get_N())
 
     # Visualize dataset and final predictions.
     plot.subplot(133)
@@ -57,7 +57,7 @@ b = Parameter(name="b")
 h = w * x + b
 loss = (h - y) ** 2
 
-# Plot and fit.
+# Plot, fit and plot.
 plot_all(h, loss, dataset)
 
 
@@ -67,10 +67,10 @@ y = Input(name="y")
 w1 = Parameter(name="w1")
 w2 = Parameter(name="w2")
 b = Parameter(name="b")
-h = Add([b, w1 * x, Prod([w2, x, x])])
+h = Add([b, w1 * x, w2 * x ** 2])
 # The next line is the same but with more nodes.
 #h = b + w1 * x + w2 * x * x
 loss = (h - y) ** 2
 
-# Plot and fit.
+# Plot, fit and plot.
 plot_all(h, loss, dataset)
