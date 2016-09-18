@@ -283,6 +283,22 @@ class Max(Element):
         return "max(%s, %s)" % (str(self.inputs[0]), str(self.inputs[1]))
 
 
+class ReduceSum(Element):
+
+    def __init__(self, element, **args):
+        Element.__init__(self, inputs=[element],
+                               name="sum",
+                               **args)
+
+    def forward(self):
+        self.value = np.sum(self.inputs[0].value)
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            gradients[element] += gradients[self]
+
+
 class ComputationalGraphModel(Hypothesis):
 
     def __init__(self, graph):
@@ -327,8 +343,8 @@ def backward_all(x, gradients=None):
 
         i.backward(gradients)
 
-        #if not i.is_parameter:
-        #    del gradients[i]
+        if not i.is_parameter:
+            del gradients[i]
 
     return gradients
 

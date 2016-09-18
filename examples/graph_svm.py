@@ -5,7 +5,7 @@ import numpy as np
 
 from happyml import datasets
 from happyml.graphs.core import Input, Parameter, Add, Prod, Square, \
-								Dot, Max, Constant, \
+								Dot, Max, Constant, ReduceSum, \
                                 forward_all, check_gradients, \
                                 backward_all
 from happyml.graphs.viz import graph2dot
@@ -16,7 +16,7 @@ from happyml import plot
 
 def plot_all(x, y, h, loss, dataset):
     # Visualize graph using graphviz.
-    g = graph2dot(loss, filename="graph", format="png")
+    g = graph2dot(h, filename="graph", format="png")
     g.render()
     plot.figure(figsize=(15, 3))
     plot.subplot(131)
@@ -57,8 +57,10 @@ y = Input(name="y")
 w = Parameter(shape=(2,), name="w")
 b = Parameter(name="b")
 h = Dot(w, x) + b
-# Hinge loss
-loss = Max(0, 1 - y * h)
+# Hinge loss + l2 loss
+lambda_ = Constant(0.001)
+l2_loss = lambda_ * ReduceSum(w ** 2)
+loss = Max(0, 1 - y * h) + l2_loss
 
 # Plot, fit and plot.
 plot_all(x, y, h, loss, dataset)
@@ -74,8 +76,10 @@ w2 = Parameter(shape=(2,), name="w2")
 b2 = Parameter(name="b2")
 a2 = w2.dot(x ** 2) + b2
 h = a1 + a2
-# Hinge loss
-loss = Max(0, 1 - y * h)
+# Hinge loss + l2 loss
+lambda_ = Constant(0.001)
+l2_loss = ReduceSum(w1 ** 2) * lambda_ + ReduceSum(w2 ** 2) * lambda_
+loss = Max(0, 1 - y * h) + l2_loss
 
 # Plot, fit and plot.
 plot_all(x, y, h, loss, dataset)
