@@ -11,7 +11,7 @@ from happyml.graphs.loss import LMS
 from happyml import plot
 
 
-def plot_all(h, loss, dataset):
+def plot_all(x_input, y_input, h, loss, dataset):
     # Visualize graph using graphviz.
     g = graph2dot(h, filename="graph", format="png")
     g.render()
@@ -30,10 +30,10 @@ def plot_all(h, loss, dataset):
 
     # Provided SGD optimizer is the default option.
     # You can delete it if you prefer.
-    minimize(loss, dataset,
+    minimize(loss, dataset, feed={"x": x_input, "y": y_input},
              optimizer=SGD(learning_rate=0.1),
              epochs=10,
-             batch_size=1)#dataset.get_N())
+             batch_size=1)
 
     # Visualize dataset and final predictions.
     plot.subplot(133)
@@ -58,7 +58,7 @@ h = w * x + b
 loss = (h - y) ** 2
 
 # Plot, fit and plot.
-plot_all(h, loss, dataset)
+plot_all(x, y, h, loss, dataset)
 
 
 # Squared computation graph.
@@ -73,4 +73,4 @@ h = Add([b, w1 * x, w2 * x ** 2])
 loss = (h - y) ** 2
 
 # Plot, fit and plot.
-plot_all(h, loss, dataset)
+plot_all(x, y, h, loss, dataset)

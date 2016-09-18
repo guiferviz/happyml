@@ -10,10 +10,10 @@ class Element(object):
     id_count = 0
 
     def __init__(self, **args):
-        shape = args.get("shape", ())
         self.value = args.get("value", None)
         if self.value is None:
-            self.value = np.random.rand(*shape)
+            shape = args.get("shape", ())
+            self.value = np.random.rand(*shape) - 0.5
         self.value = np.asfarray(self.value)
         self.shape = self.value.shape
         self.inputs = args.get("inputs", [])
@@ -53,8 +53,11 @@ class Element(object):
     def to_model(self):
         return ComputationalGraphModel(self)
 
-	def dot(self, o):
-		return Dot(self, o)
+    def dot(self, o):
+        return Dot(self, o)
+
+    def max(self, o):
+        return Max(self, o)
 
     def __mul__(self, o):
         return Prod([self, o])
@@ -62,8 +65,17 @@ class Element(object):
     def __add__(self, o):
         return Add([self, o])
 
+    def __radd__(self, o):
+        return Add([as_element(o), self])
+
     def __sub__(self, o):
         return Sub([self, o])
+
+    def __rsub__(self, o):
+        return Sub([as_element(o), self])
+
+    def __neg__(self):
+        return Neg(self)
 
     def __pow__(self, o):
         if o == 2:
@@ -82,8 +94,8 @@ class Input(Element):
 
     def __init__(self, value=None, **args):
         Element.__init__(self, value=value,
-        					   is_input=True,
-        					   **args)
+                               is_input=True,
+                               **args)
 
     def __str__(self):
         string = Element.__str__(self)
@@ -107,6 +119,12 @@ class Parameter(Element):
             return "Parameter(%f)" % self.value
 
         return string
+
+
+class Constant(Element):
+
+    def __init__(self, value, **args):
+        Element.__init__(self, value=value, name=str(value), **args)
 
 
 class Add(Element):
@@ -136,10 +154,9 @@ class Sub(Element):
         Element.__init__(self, inputs=inputs, name="-", **args)
 
     def forward(self):
-        it = iter(self.inputs)
-        result = it.next().value
-        for i in it:
-            result -= i.value
+        result = np.array(self.inputs[0].value)
+        for i in range(1, len(self.inputs)):
+            result -= self.inputs[i].value
 
         self.value = result
 
@@ -152,6 +169,23 @@ class Sub(Element):
 
     def __str__(self):
         return "(%s)" % " - ".join(str(i) for i in self.inputs)
+
+
+class Neg(Element):
+
+    def __init__(self, input, **args):
+        Element.__init__(self, inputs=[input], name="-", **args)
+
+    def forward(self):
+        self.value = self.inputs[0].value
+
+    def backward(self, gradients):
+        i = self.inputs[0]
+        if i.has_parameter:
+            gradients[i] += -np.ones(i.value.shape)
+
+    def __str__(self):
+        return "(-%s)" % str(self.inputs[0])
 
 
 class Prod(Element):
@@ -170,9 +204,15 @@ class Prod(Element):
         for i in self.inputs:
             val *= i.value
         
-        for i in self.inputs:
-            if i.has_parameter:
-                gradients[i] += val / i.value * gradients[self]
+        n = len(self.inputs)
+        for i in range(n):
+            element = self.inputs[i]
+            if element.has_parameter:
+                value = 1
+                for j in range(n):
+                    if j == i: continue
+                    value *= self.inputs[j].value
+                gradients[element] += value * gradients[self]
 
     def __str__(self):
         return "(%s)" % " * ".join(str(i) for i in self.inputs)
@@ -182,8 +222,8 @@ class Dot(Element):
 
     def __init__(self, input1, input2, **args):
         Element.__init__(self, inputs=[input1, input2],
-        					   name=".",
-        					   **args)
+                               name=".",
+                               **args)
 
     def forward(self):
         self.value = np.dot(self.inputs[0].value, self.inputs[1].value)
@@ -191,10 +231,10 @@ class Dot(Element):
     def backward(self, gradients):
         if self.inputs[0].has_parameter:
             gradients[self.inputs[0]] += self.inputs[1].value * \
-            							 gradients[self]
+                                         gradients[self]
         if self.inputs[1].has_parameter:
             gradients[self.inputs[1]] += self.inputs[0].value * \
-            							 gradients[self]
+                                         gradients[self]
 
     def __str__(self):
         return "(%s)" % " . ".join(str(i) for i in self.inputs)
@@ -217,6 +257,32 @@ class Square(Element):
         return "(%s ^ 2)" % str(self.inputs[0])
 
 
+class Max(Element):
+
+    def __init__(self, input1, input2, **args):
+        input1 = as_element(input1)
+        input2 = as_element(input2)
+        Element.__init__(self, inputs=[input1, input2],
+                               name="max",
+                               **args)
+
+    def forward(self):
+        self.value = np.maximum(self.inputs[0].value,
+                                self.inputs[1].value)
+
+    def backward(self, gradients):
+        input1, input2 = self.inputs
+        if input1.has_parameter:
+            gradients[input1] += (input1.value >= input2.value).astype(
+                float) * gradients[self]
+        if input2.has_parameter:
+            gradients[input2] += (input2.value > input1.value).astype(
+                float) * gradients[self]
+
+    def __str__(self):
+        return "max(%s, %s)" % (str(self.inputs[0]), str(self.inputs[1]))
+
+
 class ComputationalGraphModel(Hypothesis):
 
     def __init__(self, graph):
@@ -228,6 +294,15 @@ class ComputationalGraphModel(Hypothesis):
     def h(self, x):
         self.x.set_value(x)
         return forward_all(self.graph).reshape((1,))
+
+
+def as_element(x):
+    if isinstance(x, Element):
+        return x
+    elif isinstance(x, (int, long, float)):
+        return Constant(x)
+
+    raise ValueError("Unknow type")
 
 
 def forward_all(x):
@@ -252,11 +327,10 @@ def backward_all(x, gradients=None):
 
         i.backward(gradients)
 
-        if not i.is_parameter:
-            del gradients[i]
+        #if not i.is_parameter:
+        #    del gradients[i]
 
     return gradients
-
 
 
 def check_gradients(x, delta=1e-6, threshold=0.01):
@@ -278,6 +352,5 @@ def check_gradients(x, delta=1e-6, threshold=0.01):
         print "param: %s" % str(param)
         print "gradient (finite difference): %s" % g
         print "gradient (automatic): %s" % gradients[param]
-        print "error: %s" % ((g-gradients[param])/gradients[param])
         if not np.allclose(g, gradients[param], rtol=threshold):
             raise ValueError("gradients do not match")

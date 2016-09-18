@@ -25,10 +25,13 @@ class SGD(Optimizer):
             i.value -= self.learning_rate * gradients[i]
 
 
-def minimize(loss, dataset, optimizer=None, epochs=10, batch_size=1):
+def minimize(loss, dataset, optimizer=None,
+             epochs=10, batch_size=1, feed=None):
     optimizer = optimizer or SGD(0.1)
 
-    inputs = [i for i in loss.get_computation_path() if i.is_input]
+    if feed is None:
+        inputs = [i for i in loss.get_computation_path() if i.is_input]
+        feed = {"x": inputs[0], "y": inputs[1]}
 
     n = dataset.get_N()
     idx = np.arange(n)
@@ -40,8 +43,8 @@ def minimize(loss, dataset, optimizer=None, epochs=10, batch_size=1):
             gradients = {}
             for j in range(index, min(n, index + batch_size)):
                 x, y = dataset[idx[j]]
-                inputs[0].set_value(x)
-                inputs[1].set_value(y)
+                feed["x"].set_value(x)
+                feed["y"].set_value(y)
                 forward_all(loss)
                 total_loss += loss.value
                 backward_all(loss, gradients)
