@@ -5,7 +5,7 @@ import numpy as np
 from utils import count_equals
 
 
-class Hypothesis(object):
+class Model(object):
 
     def h(self, x):
         return 0
@@ -28,10 +28,10 @@ class Hypothesis(object):
         return float(correct) / X.shape[0]
 
 
-class Perceptron(Hypothesis):
+class Perceptron(Model):
 
-    def __init__(self, w=None, b=None):
-        self.w = w if w is not None else np.zeros(2)
+    def __init__(self, w=None, b=None, d=2):
+        self.w = w if w is not None else np.zeros(d)
         self.b = b if b is not None else 0
 
     def h(self, x):
@@ -47,12 +47,19 @@ class Perceptron(Hypothesis):
     def pla(self, X, y, iterations=10):
         """Perceptron Learning Algorithm."""
         y = y.flatten()
+        idx = np.arange(X.shape[0])
         for i in range(iterations):
-            for j in range(X.shape[0]):
+            np.random.shuffle(idx)
+            error = False
+            for j in idx:
                 x = X[j, :].T
                 if self.h(x) != y[j]:
+                    error = True
                     self.w += y[j] * x
                     self.b += y[j]
+                    break
+            if not error: return i
+        return iterations
 
     def pocket(self, X, y, iterations=10):
         max_accuracy = 0.0
@@ -77,18 +84,29 @@ class Perceptron(Hypothesis):
         self.b = pocket_b
 
 
-class LinearRegression(Hypothesis):
+class LinearRegression(Model):
 
-    def __init__(self, w=None, b=None):
-        self.w = w if w is not None else np.zeros(2)
+    def __init__(self, w=None, b=None, d=1):
+        self.w = w if w is not None else np.zeros(d)
         self.b = b if b is not None else 0
 
     def h(self, x):
         return np.dot(self.w.T, x) + self.b
 
+    def transform(self, X):
+        return X
+
     def predict(self, X):
+        X = self.transform(X)
         return np.dot(X, self.w) + self.b
 
+    def fit(self, X, y):
+        # Add column of ones.
+        X = np.c_[np.ones(X.shape[0]), X]
+        # w = pinv(X) * y    (1d array)
+        self.w = np.dot(np.linalg.pinv(X), y).flatten()
+        self.b = self.w[0]
+        self.w = self.w[1:]
 
 
 def linear_kernel(x_1, x_2):
@@ -111,7 +129,7 @@ def get_gaussian_kernel(sigma=1):
     return lambda x_1, x_2: gaussian_kernel(x_1, x_2, sigma=sigma)
 
 
-class PerceptronKernel(Hypothesis):
+class PerceptronKernel(Model):
 
     def __init__(self, X, y, kernel):
         self.n = X.shape[0]

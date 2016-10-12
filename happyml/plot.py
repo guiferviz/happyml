@@ -165,7 +165,7 @@ def get_binary_margin_area_colors():
             light_hex_color(get_class_color(1), light=0.3))
 
 
-def predict_1d_area(model, limits=None, samples=50):
+def predict_1d_area(model, limits=None, samples=50, **kwargs):
     if not limits:
         limits = [-1, 1]
     elif len(limits) != 2:
@@ -370,7 +370,7 @@ def prepare_plot(limits=None, scaled=True, autoscale=True,
                  margin=0, margin_x=None, margin_y=None,
                  grid=False, grid_x=None, grid_y=None,
                  ticks=True, off=False, xlabel=None, ylabel=None,
-                 label_size=None, title=None, title_size=None):
+                 label_size=None, title=None, title_size=None, **kwargs):
     """Set basic properties of the matplotlib plot."""
     ax = plt.gca()
 
@@ -604,16 +604,33 @@ def plot_line(x, y, **kwargs):
     prepare_plot(**kwargs)
 
 
-def model_binary_ones(model, data=None, **kwargs):
-    if data is not None: dataset(data)
+def model_binary_ones(model, **kwargs):
     X, Y, Z = predict_area(model, **kwargs)
     binary_ones(X, Y, Z, **kwargs)
 
 
-def model_binary_margins(model, data=None, **kwargs):
-    if data is not None: dataset(data)
+def model_binary_margins(model, **kwargs):
     X, Y, Z = predict_area(model, **kwargs)
     binary_margins(X, Y, Z, **kwargs)
+
+
+def model_line(model, **kwargs):
+    x, y = predict_1d_area(model, **kwargs)
+    plot_line(x, y, **kwargs)
+
+
+def model(model, plot_type=None, data=None, **kwargs):
+    if data is not None: dataset(data)
+    plot_type = plot_type or model._plot_type
+    if plot_type:
+        if "binary_one" in plot_type:
+            return model_binary_ones(model, **kwargs)
+        elif "binary_margin" in plot_type:
+            return model_binary_margins(model, **kwargs)
+        elif "line" in plot_type:
+            return model_line(model, **kwargs)
+    raise ValueError("Model of type '%s' cannot be plotted" %
+                     plot_type)
 
 
 def imshow(img, **kwargs):
@@ -652,10 +669,14 @@ def suptitle(*args, **kwargs):
     return plt.suptitle(*args, **kwargs)
 
 
+from models import Model
+Model.plot = model
+Model._plot_type = None
+
 from models import Perceptron, PerceptronKernel, LinearRegression
-Perceptron.plot = model_binary_ones
-PerceptronKernel.plot = model_binary_ones
-LinearRegression.plot = model_binary_ones
+Perceptron._plot_type = "binary_ones"
+PerceptronKernel._plot_type = "binary_ones"
+LinearRegression._plot_type = "line"
 
 from datasets import DataSet
 DataSet.plot = dataset

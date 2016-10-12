@@ -80,3 +80,8 @@ def one_hot(vector):
 
     return vector
 
+
+def shuffle(x, y):
+    assert len(x) == len(y)
+    p = numpy.random.permutation(len(x))
+    return x[p], y[p]

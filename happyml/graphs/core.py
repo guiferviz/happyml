@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from happyml.models import Hypothesis
+from happyml.models import Model
 
 
 class Element(object):
@@ -142,7 +142,13 @@ class Add(Element):
     def backward(self, gradients):
         for i in self.inputs:
             if i.has_parameter:
-                gradients[i] += gradients[self]
+                try:
+                    gradients[i] += gradients[self]
+                except ValueError as e:
+                    print i, i.value.shape
+                    print gradients[i].shape, gradients[self].shape
+                    print gradients[i] + gradients[self]
+                    raise e
 
     def __str__(self):
         return "(%s)" % " + ".join(str(i) for i in self.inputs)
@@ -299,7 +305,23 @@ class ReduceSum(Element):
             gradients[element] += gradients[self]
 
 
-class ComputationalGraphModel(Hypothesis):
+class Tanh(Element):
+
+    def __init__(self, element, **args):
+        Element.__init__(self, inputs=[element],
+                               name="tanh",
+                               **args)
+
+    def forward(self):
+        self.value = np.tanh(self.inputs[0].value)
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            gradients[element] += (1 - np.square(element.value)) * gradients[self]
+
+
+class ComputationalGraphModel(Model):
 
     def __init__(self, graph):
         inputs = [i for i in graph.get_computation_path() if i.is_input]
