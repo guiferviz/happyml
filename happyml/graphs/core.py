@@ -13,7 +13,7 @@ class Element(object):
         self.value = args.get("value", None)
         if self.value is None:
             shape = args.get("shape", ())
-            self.value = np.random.rand(*shape) - 0.5
+            self.value = (np.random.rand(*shape) - 0.5)
         self.value = np.asfarray(self.value)
         self.shape = self.value.shape
         self.inputs = args.get("inputs", [])
@@ -130,7 +130,11 @@ class Constant(Element):
 class Add(Element):
 
     def __init__(self, inputs, **args):
-        Element.__init__(self, inputs=inputs, name="+", **args)
+        shape = inputs[0].shape
+        Element.__init__(self, inputs=inputs,
+                               name="+",
+                               shape=shape,
+                               **args)
 
     def forward(self):
         result = 0
@@ -227,20 +231,24 @@ class Prod(Element):
 class Dot(Element):
 
     def __init__(self, input1, input2, **args):
+        shape = np.dot(input1.value, input2.value).shape
         Element.__init__(self, inputs=[input1, input2],
                                name=".",
+                               shape=shape,
                                **args)
 
     def forward(self):
         self.value = np.dot(self.inputs[0].value, self.inputs[1].value)
 
+    def _gradient(self, a, b, gradients):
+        gradients[a] = reduce_like(b.value * \
+                gradients[self][:, np.newaxis], a.shape)
+
     def backward(self, gradients):
         if self.inputs[0].has_parameter:
-            gradients[self.inputs[0]] += self.inputs[1].value * \
-                                         gradients[self]
+            self._gradient(self.inputs[0], self.inputs[1], gradients)
         if self.inputs[1].has_parameter:
-            gradients[self.inputs[1]] += self.inputs[0].value * \
-                                         gradients[self]
+            self._gradient(self.inputs[1], self.inputs[0], gradients)
 
     def __str__(self):
         return "(%s)" % " . ".join(str(i) for i in self.inputs)
@@ -292,8 +300,10 @@ class Max(Element):
 class ReduceSum(Element):
 
     def __init__(self, element, **args):
+        shape = np.sum(element.value).shape
         Element.__init__(self, inputs=[element],
                                name="sum",
+                               shape=shape,
                                **args)
 
     def forward(self):
@@ -310,6 +320,7 @@ class Tanh(Element):
     def __init__(self, element, **args):
         Element.__init__(self, inputs=[element],
                                name="tanh",
+                               shape=element.shape,
                                **args)
 
     def forward(self):
@@ -319,6 +330,44 @@ class Tanh(Element):
         element = self.inputs[0]
         if element.has_parameter:
             gradients[element] += (1 - np.square(element.value)) * gradients[self]
+
+
+class Sigmoid(Element):
+
+    def __init__(self, element, **args):
+        Element.__init__(self, inputs=[element],
+                               name="sigmoid",
+                               shape=element.shape,
+                               **args)
+
+    def forward(self):
+        element = self.inputs[0]
+        self.value = 1 / (1 + np.exp(-element.value))
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            gradients[element] += element.value * (1 - element.value)
+
+
+class ReLU(Element):
+
+    def __init__(self, element, epsilon=0, **args):
+        self.epsilon = epsilon
+        Element.__init__(self, inputs=[element],
+                               name="ReLU",
+                               shape=element.shape,
+                               **args)
+
+    def forward(self):
+        element = self.inputs[0]
+        self.value = np.maximum(self.epsilon, element.value)
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            gradients[element] += (element.value >= self.epsilon).astype(
+                float) * gradients[self]
 
 
 class ComputationalGraphModel(Model):
@@ -343,6 +392,15 @@ def as_element(x):
     raise ValueError("Unknow type")
 
 
+def reduce_like(array, shape):
+    ashape = array.shape
+    if ashape == shape:
+        return array
+    else:
+        return np.sum(array, axis=0)
+        raise ValueError("I don't know how to Reduce Like :(")
+
+
 def forward_all(x):
     path = x.get_computation_path()
     for i in path:
@@ -357,7 +415,7 @@ def backward_all(x, gradients=None):
 
     for i in path:
         if i.has_parameter:
-            gradients.setdefault(i, np.zeros(i.value.shape))
+            gradients.setdefault(i, np.zeros(i.shape))
 
     for i in reversed(path):
         if not i.has_parameter:

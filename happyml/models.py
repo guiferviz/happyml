@@ -14,6 +14,8 @@ class Model(object):
         # Predict first example to get the output dim.
         x = X[0, :].T
         h = self.h(x)
+        if len(h.shape) == 0:
+            h = h.reshape((1,))
         output = np.empty((X.shape[0], h.shape[0]))
         output[0, :] = h
         # Predict all

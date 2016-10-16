@@ -168,8 +168,8 @@ def get_binary_margin_area_colors():
 def predict_1d_area(model, limits=None, samples=50, **kwargs):
     if not limits:
         limits = [-1, 1]
-    elif len(limits) != 2:
-        raise ValueError("limits need 2 values: [xmin, xmax]")
+    elif len(limits) < 2:
+        raise ValueError("limits need at least 2 values: [xmin, xmax]")
 
     x = np.linspace(limits[0], limits[1], num=samples)
     x = x.reshape((samples, 1))
