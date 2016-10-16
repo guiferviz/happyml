@@ -347,7 +347,7 @@ class Sigmoid(Element):
     def backward(self, gradients):
         element = self.inputs[0]
         if element.has_parameter:
-            gradients[element] += element.value * (1 - element.value)
+            gradients[element] += element.value * (1 - element.value) * gradients[self]
 
 
 class ReLU(Element):
@@ -429,7 +429,7 @@ def backward_all(x, gradients=None):
     return gradients
 
 
-def check_gradients(x, delta=1e-6, threshold=0.01):
+def check_gradients(x, delta=1e-6, rtol=0.01, verbose=False):
     params = [i for i in x.get_computation_path() if i.is_parameter]
     forward_all(x)
     gradients = backward_all(x)
@@ -444,9 +444,11 @@ def check_gradients(x, delta=1e-6, threshold=0.01):
             val_plus = forward_all(x)
             param.value[i] = v
             g[i] = (val_plus - val_minus) / (2 * delta)
-        print "----------------------------------------------------"
-        print "param: %s" % str(param)
-        print "gradient (finite difference): %s" % g
-        print "gradient (automatic): %s" % gradients[param]
-        if not np.allclose(g, gradients[param], rtol=threshold):
+        match = np.allclose(g, gradients[param], rtol=rtol)
+        if verbose or not match:
+            print "----------------------------------------------------"
+            print "param: %s" % str(param)
+            print "gradient (finite difference): %s" % g
+            print "gradient (automatic): %s" % gradients[param]
+        if not match:
             raise ValueError("gradients do not match")

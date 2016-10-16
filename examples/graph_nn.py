@@ -43,9 +43,8 @@ nn = core.ReduceSum(layers[-1])
 y = core.Input(name="y")
 loss = (y - nn) ** 2
 
-#x.value[0] = 0.4
-#y.value = 0.23
-#core.check_gradients(a, threshold=0.01)
+# Check the automatic gradients computation using central difference method.
+core.check_gradients(nn)
 
 # Visualize graph using graphviz.
 g = graph2dot(nn, filename="graph", format="png")
