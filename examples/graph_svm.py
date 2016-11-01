@@ -4,16 +4,14 @@ import numpy as np
 
 from happyml import datasets
 from happyml.graphs.core import Input, Parameter, Add, Prod, Square, \
-                                Dot, Max, Constant, ReduceSum, \
-                                forward_all, check_gradients, \
-                                backward_all
+                                Dot, Max, ReduceSum, backward_all, \
+                                forward_all, check_gradients
 from happyml.graphs.viz import graph2dot
-from happyml.graphs.optimize import minimize, SGD
-from happyml.graphs.loss import LMS
+from happyml.graphs.optimize import SGD
 from happyml import plot
 
 
-def plot_all(x, y, h, loss, dataset):
+def train_and_plot(x_input, y_input, h, loss, dataset):
     # Visualize graph using graphviz.
     g = graph2dot(h, filename="graph", format="png")
     g.render()
@@ -29,13 +27,15 @@ def plot_all(x, y, h, loss, dataset):
     plot.binary_margins(X, Y, Z, title="Before training",
                         limits=[-1, 1, -1, 1])
 
-    # Provided SGD optimizer is the default option.
-    # You can delete it if you prefer.
-    print "-------------------------------------------------"
-    minimize(loss, dataset, feed={"x": x, "y": y},
-             optimizer=SGD(learning_rate=0.1),
-             epochs=100,
-             batch_size=1)
+    # Checking gradients before training.
+    check_gradients(loss)
+
+    # Using a SGD optimizer for minimizing loss.
+    optimizer = SGD(learning_rate=0.1)
+    optimizer.minimize(loss, dataset,
+                       feed={"x": x_input, "y": y_input},
+                       epochs=50,
+                       batch_size=1)
 
     # Visualize dataset and final predictions.
     plot.subplot(133)
@@ -67,7 +67,7 @@ l2_loss = lambda_ * ReduceSum(w ** 2)
 loss = Max(0, 1 - y * h) + l2_loss
 
 # Plot, fit and plot.
-plot_all(x, y, h, loss, dataset)
+train_and_plot(x, y, h, loss, dataset)
 
 
 ##############################
@@ -88,4 +88,4 @@ l2_loss = ReduceSum(w1 ** 2) * lambda_ + ReduceSum(w2 ** 2) * lambda_
 loss = Max(0, 1 - y * h) + l2_loss
 
 # Plot, fit and plot.
-plot_all(x, y, h, loss, dataset)
+train_and_plot(x, y, h, loss, dataset)

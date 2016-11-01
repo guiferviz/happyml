@@ -6,16 +6,14 @@ from happyml import datasets
 from happyml.graphs.core import Input, Parameter, Add, Prod, Square, \
                                 forward_all, check_gradients
 from happyml.graphs.viz import graph2dot
-from happyml.graphs.optimize import minimize, SGD
-from happyml.graphs.loss import LMS
+from happyml.graphs.optimize import SGD
 from happyml import plot
 
 
-def plot_all(x_input, y_input, h, loss, dataset):
+def train_and_plot(x_input, y_input, h, loss, dataset):
     # Visualize graph using graphviz.
     g = graph2dot(h, filename="graph", format="png")
-    g.render()
-    #g.view()
+    g.render()  #g.view()
     plot.figure(figsize=(15, 3))
     plot.subplot(131)
     plot.imshow("graph.png",
@@ -28,13 +26,15 @@ def plot_all(x_input, y_input, h, loss, dataset):
     plot.plot_line(x, y, title="Before training",
                    limits=[-1, 1, -1, 1])
 
-    # Provided SGD optimizer is the default option.
-    # You can delete it if you prefer.
-    print "-------------------------------------------------"
-    minimize(loss, dataset, feed={"x": x_input, "y": y_input},
-             optimizer=SGD(learning_rate=0.1),
-             epochs=10,
-             batch_size=1)
+    # Checking gradients before training.
+    check_gradients(loss)
+
+    # Using a SGD optimizer for minimizing loss.
+    optimizer = SGD(learning_rate=0.1)
+    optimizer.minimize(loss, dataset,
+                       feed={"x": x_input, "y": y_input},
+                       epochs=10,
+                       batch_size=1)
 
     # Visualize dataset and final predictions.
     plot.subplot(133)
@@ -46,11 +46,15 @@ def plot_all(x_input, y_input, h, loss, dataset):
     plot.show()
 
 
-# Dataset
+############
+# Dataset. #
+############
 dataset = datasets.load("parabola.csv")
 
 
-# Linear computation graph.
+#############################
+# Linear computation graph. #
+#############################
 x = Input(name="x")
 y = Input(name="y")
 w = Parameter(name="w")
@@ -59,10 +63,12 @@ h = w * x + b
 loss = (h - y) ** 2
 
 # Plot, fit and plot.
-plot_all(x, y, h, loss, dataset)
+train_and_plot(x, y, h, loss, dataset)
 
 
-# Squared computation graph.
+##############################
+# Squared computation graph. #
+##############################
 x = Input(name="x")
 y = Input(name="y")
 w1 = Parameter(name="w1")
@@ -74,4 +80,4 @@ h = Add([b, w1 * x, w2 * x ** 2])
 loss = (h - y) ** 2
 
 # Plot, fit and plot.
-plot_all(x, y, h, loss, dataset)
+train_and_plot(x, y, h, loss, dataset)
