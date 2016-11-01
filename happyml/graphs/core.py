@@ -10,6 +10,7 @@ class Element(object):
     id_count = 0
 
     def __init__(self, **args):
+        self.name = args.get("name", None)
         self.value = args.get("value", None)
         if self.value is None:
             shape = args.get("shape", ())
@@ -17,7 +18,8 @@ class Element(object):
         self.value = np.asfarray(self.value)
         self.shape = self.value.shape
         self.inputs = args.get("inputs", [])
-        self.name = args.get("name", None)
+        for i in range(len(self.inputs)):
+            self.inputs[i] = as_element(self.inputs[i])
         self.is_input = args.get("is_input", False)
         self.is_parameter = args.get("is_parameter", False)
         self.has_parameter = args.get("has_parameter", False) or \
@@ -62,17 +64,20 @@ class Element(object):
     def __mul__(self, o):
         return Prod([self, o])
 
+    def __rmul__(self, o):
+        return Prod([o, self])
+
     def __add__(self, o):
         return Add([self, o])
 
     def __radd__(self, o):
-        return Add([as_element(o), self])
+        return Add([o, self])
 
     def __sub__(self, o):
         return Sub([self, o])
 
     def __rsub__(self, o):
-        return Sub([as_element(o), self])
+        return Sub([o, self])
 
     def __neg__(self):
         return Neg(self)
@@ -241,13 +246,14 @@ class Dot(Element):
         self.value = np.dot(self.inputs[0].value, self.inputs[1].value)
 
     def _gradient(self, a, b, gradients):
-        gradients[a] = reduce_like(b.value * gradients[self], a.shape)
+        gradients[a] += b.value * gradients[self]
 
     def backward(self, gradients):
-        if self.inputs[0].has_parameter:
-            self._gradient(self.inputs[0], self.inputs[1], gradients)
-        if self.inputs[1].has_parameter:
-            self._gradient(self.inputs[1], self.inputs[0], gradients)
+        a, b = self.inputs
+        if a.has_parameter:
+            self._gradient(a, b, gradients)
+        if b.has_parameter:
+            self._gradient(b, a, gradients)
 
     def __str__(self):
         return "(%s)" % " . ".join(str(i) for i in self.inputs)
@@ -316,6 +322,9 @@ class ReduceSum(Element):
         if element.has_parameter:
             gradients[element] += gradients[self]
 
+    def __str__(self):
+        return "sum%s" % str(self.inputs[0])
+
 
 class Tanh(Element):
 
@@ -356,8 +365,8 @@ class ReLU(Element):
 
     def __init__(self, element, epsilon=0, **args):
         self.epsilon = epsilon
+        args.setdefault("name", "ReLU")
         Element.__init__(self, inputs=[element],
-                               name="ReLU",
                                shape=element.shape,
                                **args)
 
@@ -368,8 +377,8 @@ class ReLU(Element):
     def backward(self, gradients):
         element = self.inputs[0]
         if element.has_parameter:
-            gradients[element] += (element.value >= self.epsilon).astype(
-                float) * gradients[self]
+            grad_max = (element.value >= self.epsilon).astype(float)
+            gradients[element] += grad_max * gradients[self]
 
 
 class ComputationalGraphModel(Model):
@@ -391,16 +400,7 @@ def as_element(x):
     elif isinstance(x, (int, long, float)):
         return Constant(x)
 
-    raise ValueError("Unknow type")
-
-
-def reduce_like(array, shape):
-    ashape = array.shape
-    if ashape == shape:
-        return array
-    else:
-        return np.sum(array, axis=0)
-        raise ValueError("I don't know how to Reduce Like :(")
+    raise ValueError("Unknow conversion to Element: %s" % type(x))
 
 
 def forward_all(x):
@@ -413,7 +413,7 @@ def forward_all(x):
 def backward_all(x, gradients=None):
     path = x.get_computation_path()
     gradients = gradients if gradients is not None else {}
-    gradients.setdefault(x, 1)
+    gradients.setdefault(x, np.ones(x.shape))
 
     for i in path:
         if i.has_parameter:
@@ -423,6 +423,15 @@ def backward_all(x, gradients=None):
         if not i.has_parameter:
             continue
 
+        """ Check gradients and values has the same shape.
+        print "-----------", i
+        for j in path:
+            if j.has_parameter and j in gradients:
+                print j
+                print "\t", j.shape, gradients[j].shape
+                if j.shape != gradients[j].shape:
+                    raise ValueError("Shape gradient and value not the same")
+        """
         i.backward(gradients)
 
         if not i.is_parameter:

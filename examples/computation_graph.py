@@ -30,6 +30,7 @@ def plot_all(x_input, y_input, h, loss, dataset):
 
     # Provided SGD optimizer is the default option.
     # You can delete it if you prefer.
+    print "-------------------------------------------------"
     minimize(loss, dataset, feed={"x": x_input, "y": y_input},
              optimizer=SGD(learning_rate=0.1),
              epochs=10,
