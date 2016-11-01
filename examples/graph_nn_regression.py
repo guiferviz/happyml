@@ -18,17 +18,17 @@ def add_layer(in_element, neurons, prefix="", activation=None):
                        name="%sb" % prefix)
     s = W.dot(in_element) + b
     if activation is not None:
-        return activation(s)
+        return activation(s, name="%sReLU" % prefix)
     return s  # Linear neurons
 
 
 # Load a linear regression dataset.
-dataset = datasets.load("roller_coaster.csv")
-#dataset = datasets.load("parabola.csv")
+#dataset = datasets.load("roller_coaster.csv")
+dataset = datasets.load("parabola.csv")
 #dataset = datasets.load("cubic.csv")
 
 # Build neural network computation graph.
-neurons_layers = [1, 20, 20, 20, 20, 20, 20, 1]
+neurons_layers = [1, 4, 1]
 x = core.Input(shape=(neurons_layers[0],), name="x")
 layers = [x]
 n_layers = len(neurons_layers)
