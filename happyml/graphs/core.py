@@ -52,8 +52,8 @@ class Element(object):
     def set_value(self, value):
         self.value = value.reshape(self.shape)
 
-    def to_model(self):
-        return ComputationalGraphModel(self)
+    def to_model(self, **kwargs):
+        return ComputationalGraphModel(self, **kwargs)
 
     def dot(self, o):
         return Dot(self, o)
@@ -135,10 +135,11 @@ class Constant(Element):
 class Add(Element):
 
     def __init__(self, inputs, **args):
-        shape = inputs[0].shape
+        res = 1
+        for i in inputs: res += i.value
         Element.__init__(self, inputs=inputs,
                                name="+",
-                               shape=shape,
+                               shape=i.shape,
                                **args)
 
     def forward(self):
@@ -166,7 +167,12 @@ class Add(Element):
 class Sub(Element):
 
     def __init__(self, inputs, **args):
-        Element.__init__(self, inputs=inputs, name="-", **args)
+        res = 1
+        for i in inputs: res += i.value
+        Element.__init__(self, inputs=inputs,
+                               shape=i.shape,
+                               name="-",
+                               **args)
 
     def forward(self):
         result = np.array(self.inputs[0].value)
@@ -388,15 +394,16 @@ class ReLU(Element):
 
 class ComputationalGraphModel(Model):
 
-    def __init__(self, graph):
+    def __init__(self, graph, out_shape=None):
         inputs = [i for i in graph.get_computation_path() if i.is_input]
         # FIXME: computational graphs accepts only one input.
         self.x = inputs[0]
+        self.out_shape = out_shape or (1,)
         self.graph = graph
 
     def h(self, x):
         self.x.set_value(x)
-        return forward_all(self.graph).reshape((1,))
+        return forward_all(self.graph).reshape(self.out_shape)
 
 
 def as_element(x):

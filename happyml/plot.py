@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import hex2color
 from matplotlib.colors import rgb2hex
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.image import imread
+from matplotlib.image import imread as plt_imread
+
+from scipy.misc import imresize
 
 import happyml
 
@@ -633,7 +635,14 @@ def model(model, plot_type=None, data=None, **kwargs):
                      plot_type)
 
 
-def imshow(img, **kwargs):
+def imread(name, shape=None, *args, **kwargs):
+    img = plt_imread(name, *args)
+    if shape is not None:
+        img = imresize(img, shape)
+    return img
+
+
+def imshow(img, shape=None, **kwargs):
     """Show an image in a figure.
 
     Args:
@@ -652,9 +661,20 @@ def imshow(img, **kwargs):
     if type(img) == str:
         img = imread(img)
 
+    if shape is not None:
+        img = np.clip(img.reshape(shape), 0, 1)
+
     kwargs.setdefault("off", True)
     prepare_plot(**kwargs)
-    plt.imshow(img)
+    return plt.imshow(img, interpolation="nearest")
+
+
+def ion():
+    plt.ion()
+
+
+def draw():
+    plt.draw()
 
 
 def figure(*args, **kwargs):
@@ -682,7 +702,7 @@ from datasets import DataSet
 DataSet.plot = dataset
 
 
-def show():
+def show(*args, **kwargs):
     plt.tight_layout()
     plt.subplots_adjust(top=0.85)
-    plt.show()
+    plt.show(*args, **kwargs)
