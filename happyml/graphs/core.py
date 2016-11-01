@@ -241,8 +241,7 @@ class Dot(Element):
         self.value = np.dot(self.inputs[0].value, self.inputs[1].value)
 
     def _gradient(self, a, b, gradients):
-        gradients[a] = reduce_like(b.value * \
-                gradients[self][:, np.newaxis], a.shape)
+        gradients[a] = reduce_like(b.value * gradients[self], a.shape)
 
     def backward(self, gradients):
         if self.inputs[0].has_parameter:
@@ -257,7 +256,10 @@ class Dot(Element):
 class Square(Element):
 
     def __init__(self, element, **args):
-        Element.__init__(self, inputs=[element], name="^2", **args)
+        Element.__init__(self, inputs=[element],
+                               shape=element.shape,
+                               name="^2",
+                               **args)
 
     def forward(self):
         self.value = np.square(self.inputs[0].value)
