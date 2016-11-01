@@ -245,8 +245,13 @@ class Dot(Element):
     def forward(self):
         self.value = np.dot(self.inputs[0].value, self.inputs[1].value)
 
-    def _gradient(self, a, b, gradients):
-        gradients[a] += b.value * gradients[self]
+    def _gradient(self, a, b, g):
+        if len(b.shape) > 1:
+            g[a] += np.dot(g[self], b.value)
+        elif len(a.shape) > 1:
+            g[a] += np.einsum('i,j->ij', g[self], b.value)
+        else:
+            g[a] += np.dot(g[self], b.value)
 
     def backward(self, gradients):
         a, b = self.inputs
@@ -329,8 +334,8 @@ class ReduceSum(Element):
 class Tanh(Element):
 
     def __init__(self, element, **args):
+        args.setdefault("name", "tanh")
         Element.__init__(self, inputs=[element],
-                               name="tanh",
                                shape=element.shape,
                                **args)
 

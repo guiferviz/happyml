@@ -4,7 +4,7 @@ import numpy as np
 
 from happyml import datasets
 from happyml.graphs import core
-from happyml.graphs.optimize import minimize, SGD
+from happyml.graphs.optimize import SGD
 from happyml.graphs.viz import graph2dot
 from happyml import plot
 
@@ -23,12 +23,12 @@ def add_layer(in_element, neurons, prefix="", activation=None):
 
 
 # Load a linear regression dataset.
-#dataset = datasets.load("roller_coaster.csv")
-dataset = datasets.load("parabola.csv")
+dataset = datasets.load("roller_coaster.csv")
+#dataset = datasets.load("parabola.csv")
 #dataset = datasets.load("cubic.csv")
 
 # Build neural network computation graph.
-neurons_layers = [1, 4, 1]
+neurons_layers = [1, 20, 20, 20, 20, 20, 20, 1]
 x = core.Input(shape=(neurons_layers[0],), name="x")
 layers = [x]
 n_layers = len(neurons_layers)
@@ -56,11 +56,12 @@ plot.show()
 
 # Train and plot each 1000 epochs until the end of the universe.
 model = nn.to_model()
+optimizer = SGD(learning_rate=0.01)
 while True:
-    minimize(loss, dataset, feed={"x": x, "y": y},
-             optimizer=SGD(learning_rate=0.01),
-             epochs=100,
-             batch_size=1)#dataset.get_N())
+    optimizer.minimize(loss, dataset,
+                       feed={"x": x, "y": y},
+                       epochs=100,
+                       batch_size=1)
     model.plot(plot_type="line")
     dataset.plot()
     plot.show()
