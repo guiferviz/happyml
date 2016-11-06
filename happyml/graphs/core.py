@@ -290,6 +290,27 @@ class Square(Element):
         return "(%s ^ 2)" % str(self.inputs[0])
 
 
+class Abs(Element):
+
+    def __init__(self, element, **args):
+        Element.__init__(self, inputs=[element,],
+                               name="abs",
+                               **args)
+
+    def forward(self):
+        self.value = np.abs(self.inputs[0].value)
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            grad_abs = element.value / self.value
+            gradients[element] += grad_abs * gradients[self]
+
+    def __str__(self):
+        return "abs(%s)" % str(self.inputs[0])
+
+
+
 class Max(Element):
 
     def __init__(self, input1, input2, **args):
