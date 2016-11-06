@@ -22,13 +22,22 @@ class DataSet(object):
 
     """
 
-    X = np.empty((0, 0))
+    X = None
 
-    Y = np.empty((0, 0))
+    Y = None
 
     _type = None
 
     _classes = None
+
+
+    def __init__(self, X=None, Y=None):
+        self.X = np.empty((0, 0)) if X is None else X
+        self.Y = np.empty((0, 0)) if Y is None else Y
+        if self.X.ndim == 1:
+            self.X = self.X.reshape((-1, 1))
+        if self.Y.ndim == 1:
+            self.Y = self.Y.reshape((-1, 1))
 
 
     def get_N(self):

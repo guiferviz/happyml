@@ -642,7 +642,7 @@ def imread(name, shape=None, *args, **kwargs):
     return img
 
 
-def imshow(img, shape=None, **kwargs):
+def imshow(img, shape=None, interpolation="nearest", **kwargs):
     """Show an image in a figure.
 
     Args:
@@ -661,12 +661,28 @@ def imshow(img, shape=None, **kwargs):
     if type(img) == str:
         img = imread(img)
 
+    reshape_and_clip = None
     if shape is not None:
-        img = np.clip(img.reshape(shape), 0, 1)
+        img255 = np.max(img) > 1
+        def reshape_and_clip(img):
+            if img255:
+                return np.clip(img.reshape(shape), 0, 255).astype(np.uint8)
+            else:
+                return np.clip(img.reshape(shape), 0, 1)
+        img = reshape_and_clip(img)
 
     kwargs.setdefault("off", True)
     prepare_plot(**kwargs)
-    return plt.imshow(img, interpolation="nearest")
+    plt_img = plt.imshow(img, interpolation=interpolation)
+    if reshape_and_clip: #shape is not None: <-- the same condition
+        # Reference to old set_data to avoid infinite recursivity.
+        old_set_data = plt_img.set_data
+        def set_data(new_img):
+            new_img = reshape_and_clip(new_img)
+            old_set_data(new_img)
+        plt_img.set_data = set_data
+
+    return plt_img
 
 
 def ion():

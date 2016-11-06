@@ -15,7 +15,7 @@ class Optimizer(object):
         pass
 
     def minimize(self, loss, dataset,
-                 epochs=10, batch_size=1, feed=None):
+                 epochs=10, batch_size=1, offset_epoch=0, feed=None):
         if feed is None:
             inputs = [i for i in loss.get_computation_path() if i.is_input]
             feed = {"x": inputs[0], "y": inputs[1]}
@@ -40,7 +40,7 @@ class Optimizer(object):
                     gradients[k] *= 1. / batch_size
                 self.update(gradients)
                 index += batch_size
-            print "Epoch:", i, "\tLoss:", total_loss
+            print "Epoch:", offset_epoch + i, "\tLoss:", total_loss
 
 
 class SGD(Optimizer):

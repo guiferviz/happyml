@@ -35,15 +35,17 @@ dataset.Y = np.zeros((size, 3))
 idx = 0
 for i in np.ndindex(img.shape[0:2]):
     dataset.X[idx, :] = i
-    dataset.Y[idx, :] = img[i[0], i[1], 0:3] / 255.0
+    dataset.Y[idx, :] = img[i[0], i[1], 0:3]
     idx += 1
 # Normalizing the input.
 dataset.X = (dataset.X - np.mean(dataset.X)) / np.std(dataset.X)
 print "Dataset ready for use."
+plot.imshow(img, title="Training Set :)")
+plot.show()
 
 
 # Create network.
-hidden_size = 64
+hidden_size = 50
 hidden_number = 6
 neurons_layers = [2,] + ([hidden_size,] * hidden_number) + [3,]
 print "Network architecture:", neurons_layers
@@ -67,17 +69,20 @@ core.check_gradients(loss)
 
 # Train and plot each 1000 epochs until the end of the universe.
 model = nn.to_model(out_shape=y.shape)
-optimizer = SGD(learning_rate=0.001)
+optimizer = SGD(learning_rate=0.000001)
 fig = plot.figure()
 plot_img = plot.imshow(dataset.Y, shape=img.shape)
+iteration = 0
 def update_fig(*args):
-    global model, plot_img, optimizer, loss, dataset, x, y
+    global iteration, model, plot_img, optimizer, loss, dataset, x, y
     optimizer.minimize(loss, dataset,
                        feed={"x": x, "y": y},
                        epochs=1,
+                       offset_epoch=iteration,
                        batch_size=1)
+    iteration += 1
     outimg = model.predict(dataset.X)
-    plot_img.set_data(np.clip(outimg.reshape(img.shape), 0, 1))
+    plot_img.set_data(outimg)
     return plot_img,
 
 
