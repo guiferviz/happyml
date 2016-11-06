@@ -372,14 +372,14 @@ class Tanh(Element):
     def backward(self, gradients):
         element = self.inputs[0]
         if element.has_parameter:
-            gradients[element] += (1 - np.square(element.value)) * gradients[self]
+            gradients[element] += (1 - np.square(self.value)) * gradients[self]
 
 
 class Sigmoid(Element):
 
     def __init__(self, element, **args):
+        args.setdefault("name", "sigmoid")
         Element.__init__(self, inputs=[element],
-                               name="sigmoid",
                                shape=element.shape,
                                **args)
 
@@ -390,7 +390,7 @@ class Sigmoid(Element):
     def backward(self, gradients):
         element = self.inputs[0]
         if element.has_parameter:
-            gradients[element] += element.value * (1 - element.value) * gradients[self]
+            gradients[element] += self.value * (1 - self.value) * gradients[self]
 
 
 class ReLU(Element):
