@@ -723,11 +723,21 @@ from datasets import DataSet
 DataSet.plot = dataset
 
 
-def animation(update_fun, interval=1000, fig=None):
+_animation_index = 0
+def animation(update_fun, interval=1000, fig=None, **kwargs):
+    kwargs.setdefault("show", True)
     if fig is None:
         fig = plt.gcf()
-    ani = plt_animation.FuncAnimation(fig, update_fun, interval=interval)
-    if show:
+    global _animation_index
+    _animation_index = 0
+    def update_f(*args):
+        global _animation_index
+        data = update_fun(_animation_index, *args)
+        _animation_index += 1
+        return data
+    ani = plt_animation.FuncAnimation(fig, update_f,
+                                      interval=interval)
+    if kwargs.get("show"):
         show()
     return ani
 
