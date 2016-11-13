@@ -8,6 +8,8 @@ from pkg_resources import Requirement, resource_filename
 from ConfigParser import ConfigParser
 
 
+DATA_DIR = ".happyml"
+
 CONFIG_FILENAME = "happyml.conf"
 
 ERROR_CONFIG_FILE = "Error parsing config file %s."
@@ -48,6 +50,15 @@ DEFAULT_CONFIG = {
 
     "theme": "default",
 }
+
+
+def happyml_data_dir():
+    """Return the path of the data directory.
+
+    The data directory is used to store downloaded datasets like MNIST.
+
+    """
+    return os.path.join(os.path.expanduser("~"), DATA_DIR)
 
 
 def happyml_config_files():

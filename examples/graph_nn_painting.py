@@ -39,6 +39,8 @@ for i in np.ndindex(img.shape[0:2]):
     idx += 1
 # Normalizing the input.
 dataset.X = (dataset.X - np.mean(dataset.X)) / np.std(dataset.X)
+# Normalize the output if you use Tanh or Sigmoid activations.
+#dataset.Y /= 255.
 print "Dataset ready for use."
 plot.imshow(img, title="Training Set :)")
 plot.show()

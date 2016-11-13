@@ -642,7 +642,7 @@ def imread(name, shape=None, *args, **kwargs):
     return img
 
 
-def imshow(img, shape=None, interpolation="nearest", **kwargs):
+def imshow(img, shape=None, interpolation="nearest", cmap=None, **kwargs):
     """Show an image in a figure.
 
     Args:
@@ -660,6 +660,10 @@ def imshow(img, shape=None, interpolation="nearest", **kwargs):
     """
     if type(img) == str:
         img = imread(img)
+    if img.ndim == 3 and img.shape[2] == 1:  # gray image with 3 dims
+        img = img[:, :, 0]  # Remove last dimension
+    if img.ndim == 2:
+        cmap = "gray"
 
     reshape_and_clip = None
     if shape is not None:
@@ -673,7 +677,7 @@ def imshow(img, shape=None, interpolation="nearest", **kwargs):
 
     kwargs.setdefault("off", True)
     prepare_plot(**kwargs)
-    plt_img = plt.imshow(img, interpolation=interpolation)
+    plt_img = plt.imshow(img, interpolation=interpolation, cmap=cmap)
     if reshape_and_clip: #shape is not None: <-- the same condition
         # Reference to old set_data to avoid infinite recursivity.
         old_set_data = plt_img.set_data
