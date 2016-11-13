@@ -661,10 +661,6 @@ def imshow(img, shape=None, interpolation="nearest", cmap=None, **kwargs):
     """
     if type(img) == str:
         img = imread(img)
-    if img.ndim == 3 and img.shape[2] == 1:  # gray image with 3 dims
-        img = img[:, :, 0]  # Remove last dimension
-    if img.ndim == 2:
-        cmap = "gray"
 
     reshape_and_clip = None
     if shape is not None:
@@ -675,6 +671,10 @@ def imshow(img, shape=None, interpolation="nearest", cmap=None, **kwargs):
             else:
                 return np.clip(img.reshape(shape), 0, 1)
         img = reshape_and_clip(img)
+    if img.ndim == 3 and img.shape[2] == 1:  # gray image with 3 dims
+        img = img[:, :, 0]  # Remove last dimension
+    if img.ndim == 2:
+        cmap = "gray"
 
     kwargs.setdefault("off", True)
     prepare_plot(**kwargs)
