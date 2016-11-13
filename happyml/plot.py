@@ -11,6 +11,7 @@ from matplotlib.colors import hex2color
 from matplotlib.colors import rgb2hex
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.image import imread as plt_imread
+import matplotlib.animation as plt_animation
 
 from scipy.misc import imresize
 
@@ -720,6 +721,15 @@ LinearRegression._plot_type = "line"
 
 from datasets import DataSet
 DataSet.plot = dataset
+
+
+def animation(update_fun, interval=1000, fig=None):
+    if fig is None:
+        fig = plt.gcf()
+    ani = plt_animation.FuncAnimation(fig, update_fun, interval=interval)
+    if show:
+        show()
+    return ani
 
 
 def show(*args, **kwargs):
