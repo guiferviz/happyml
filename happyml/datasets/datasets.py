@@ -82,6 +82,9 @@ class DataSet(object):
         save(io, self)
         return io.getvalue()
 
+    def __len__(self):
+        return self.get_N()
+
 
 def load(filename, delimiter="", **kwargs):
     # Set delimiters if filename has a know extension.
