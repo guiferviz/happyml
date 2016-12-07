@@ -16,7 +16,7 @@ def add_layer(in_element, neurons, prefix="", activation=None):
                        name="%sb" % prefix)
     s = W.dot(in_element) + b
     if activation is not None:
-        return activation(s, name="%sReLU" % prefix)
+        return activation(s, name="%sSigmoid" % prefix)
     return s  # Linear neurons
 
 
@@ -42,7 +42,7 @@ for i in range(1, n_layers):
     last = i == n_layers - 1
     layers += [add_layer(layers[i - 1], neurons_layers[i],
                          prefix="Layer%d/" % i,
-                         activation=core.Sigmoid if last else core.Sigmoid)]
+                         activation=core.Sigmoid)]
 nn = layers[-1]
 
 # Define loss function.

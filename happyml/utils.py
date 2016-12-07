@@ -81,6 +81,10 @@ def one_hot(vector):
     return vector
 
 
+def flatten_one_hot(vector):
+    return np.argmax(vector, axis=1)
+
+
 def shuffle(x, y):
     assert len(x) == len(y)
     p = numpy.random.permutation(len(x))

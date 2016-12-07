@@ -6,7 +6,7 @@ from StringIO import StringIO
 
 import numpy as np
 
-from happyml.utils import one_hot
+from happyml.utils import one_hot, flatten_one_hot
 
 
 DATASET_TYPES = [
@@ -41,7 +41,7 @@ class DataSet(object):
 
 
     def get_N(self):
-        """Gets the number of samples in the dataset.
+        """Get the number of samples in the dataset.
 
         """
         # The next two expressions are not necessarily equivalent:
@@ -50,22 +50,49 @@ class DataSet(object):
         return self.X.shape[0]
 
     def get_d(self):
-        """Gets the dimension of each sample in the dataset.
+        """Get the dimension of each sample in the dataset.
 
         """
         return self.X.shape[1]
 
     def get_k(self):
-        """Gets the number of outputs of each sample.
-        
+        """Get the number of outputs of each sample.
+
         """
         return self.Y.shape[1]
 
+    def get_flatten_classes(self):
+        """Return a flattened array with the target values.
+
+        It is not defined with continuous/multiclass multioutput
+        datasets.
+        """
+        _type = self.get_type()
+        if "one-hot" in _type:
+            return flatten_one_hot(self.Y).flatten().astype(int)
+        elif "binary" == _type or "multiclass" == _type:
+            return self.Y.flatten().astype(int)
+        elif "continuous" == _type:
+            return self.Y.flatten()
+
+        raise ValueError("No flattened defined for a %s dataset." %
+                         _type)
+
     def get_classes(self, force=False):
+        """Return an array with the unique target values.
+
+        """
         if force or self._classes is None:
-            self._classes = np.unique(self.Y)
+            self._classes = np.unique(self.get_flatten_classes())
 
         return self._classes
+
+    def get_class(self, class_number):
+        """Return the indexes of the samples of the given class.
+
+        """
+        flattened_classes = self.get_flatten_classes()
+        return np.where(flattened_classes == class_number)[0]
 
     def get_type(self, force=False):
         if force or self._type is None:
