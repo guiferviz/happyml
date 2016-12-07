@@ -419,7 +419,7 @@ class ComputationalGraphModel(Model):
         inputs = [i for i in graph.get_computation_path() if i.is_input]
         # FIXME: computational graphs accepts only one input.
         self.x = inputs[0]
-        self.out_shape = out_shape or (1,)
+        self.out_shape = out_shape or graph.shape  #(1,)
         self.graph = graph
 
     def h(self, x):

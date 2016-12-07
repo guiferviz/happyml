@@ -16,6 +16,7 @@ import matplotlib.animation as plt_animation
 from scipy.misc import imresize
 
 import happyml
+from happyml.utils import flatten_one_hot
 
 
 MAX_CLASS_NUMBER = 10
@@ -243,6 +244,9 @@ def predict_area(model, limits=None, samples=50,
     coordinates = np.array([X, Y]).reshape(2, -1).T
     # Use the model to predict an output on each coordinate pair.
     predicted = model.predict(coordinates)
+    # Get a flattened version if it is a multiclass matrix.
+    if len(predicted.shape) > 1:
+        predicted = flatten_one_hot(predicted)
     # Convert the predicted values to a matrix form.
     Z = predicted.reshape(X.shape)  # or Y.shape
     # Return all the usefull data.
@@ -478,9 +482,9 @@ def dataset_classification(dataset, colors=None, markers=None,
         alpha = [alpha]
     alpha = alpha or theme["alpha"]
 
-    classes = dataset.Y.flatten().astype(int)
-    classes[classes < 0] = 0
-    unique_classes = np.unique(classes)
+    classes = dataset.get_flatten_classes()
+    unique_classes = dataset.get_classes()
+    unique_classes[unique_classes < 0] = 0
     if return_all:
         # FIXME: limited class to plot.
         # Transform return_all to return_at_least
@@ -602,6 +606,15 @@ def binary_margins(X, Y, Z, **kwargs):
         plt.contour(X, Y, Z, [0,], linewidths=3, colors='#000000')
 
 
+def multiclass(X, Y, Z, **kwargs):
+    colors = kwargs.get('colors', get_theme("colors"))
+    plt.contourf(X, Y, Z, colors=colors,
+            origin='lower', extend='both', alpha=0.8)
+    if kwargs.get('contours', True):
+        plt.contour(X, Y, Z, range(len(colors)),
+                    linewidths=3, colors='#000000')
+
+
 def plot_line(x, y, **kwargs):
     plt.plot(x, y)
     prepare_plot(**kwargs)
@@ -617,6 +630,11 @@ def model_binary_margins(model, **kwargs):
     binary_margins(X, Y, Z, **kwargs)
 
 
+def model_multiclass(model, **kwargs):
+    X, Y, Z = predict_area(model, **kwargs)
+    multiclass(X, Y, Z, **kwargs)
+
+
 def model_line(model, **kwargs):
     x, y = predict_1d_area(model, **kwargs)
     plot_line(x, y, **kwargs)
@@ -630,6 +648,8 @@ def model(model, plot_type=None, data=None, **kwargs):
             return model_binary_ones(model, **kwargs)
         elif "binary_margin" in plot_type:
             return model_binary_margins(model, **kwargs)
+        elif "multiclass" in plot_type:
+            return model_multiclass(model, **kwargs)
         elif "line" in plot_type:
             return model_line(model, **kwargs)
     raise ValueError("Model of type '%s' cannot be plotted" %
