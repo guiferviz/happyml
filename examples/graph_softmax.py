@@ -43,7 +43,7 @@ loss = core.ReduceSum((y - nn) ** 2)
 
 # Train and plot each 100 epochs until the end of the universe.
 model = nn.to_model()
-optimizer = SGD(learning_rate=0.01)
+optimizer = SGD(learning_rate=0.1)
 while True:
     optimizer.minimize(loss, dataset,
                        feed={"x": x, "y": y},

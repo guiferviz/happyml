@@ -607,10 +607,10 @@ def binary_margins(X, Y, Z, **kwargs):
 
 
 def multiclass(X, Y, Z, **kwargs):
-    colors = kwargs.get('colors', get_theme("colors"))
-    plt.contourf(X, Y, Z, colors=colors,
-            origin='lower', extend='both', alpha=0.8)
-    if kwargs.get('contours', True):
+    colors = kwargs.get("colors", get_theme("colors"))
+    levels = np.arange(len(colors) + 1) - 0.5
+    plt.contourf(X, Y, Z, levels, alpha=0.8, colors=colors)
+    if kwargs.get('contours', False):
         plt.contour(X, Y, Z, range(len(colors)),
                     linewidths=3, colors='#000000')
 
