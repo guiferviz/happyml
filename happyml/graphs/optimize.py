@@ -42,7 +42,7 @@ class Optimizer(object):
                 #    gradients[k] *= 1. / batch_size
                 self.update(gradients)
                 index += batch_size
-            print "Epoch:", offset_epoch + i, "\tLoss:", total_loss
+            print "Epoch:", offset_epoch + i, "\tLoss:", total_loss / n
 
 
 class SGD(Optimizer):

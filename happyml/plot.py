@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import hex2color
 from matplotlib.colors import rgb2hex
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
 from matplotlib.image import imread as plt_imread
 import matplotlib.animation as plt_animation
 
@@ -607,12 +608,19 @@ def binary_margins(X, Y, Z, **kwargs):
 
 
 def multiclass(X, Y, Z, **kwargs):
+    """Plot the Z matrix assuming it has several class numbers.
+
+    """
     colors = kwargs.get("colors", get_theme("colors"))
+    cm = ListedColormap(colors)
     levels = np.arange(len(colors) + 1) - 0.5
-    plt.contourf(X, Y, Z, levels, alpha=0.8, colors=colors)
-    if kwargs.get('contours', False):
-        plt.contour(X, Y, Z, range(len(colors)),
-                    linewidths=3, colors='#000000')
+
+    prepare_plot(**kwargs)
+
+    plt.imshow(Z, cmap=cm, vmin=0, vmax=len(colors),
+               extent=[np.min(X[0, :]), np.max(X[0, :]),
+                       np.min(Y[:, 0]), np.max(Y[:, 0])],
+               interpolation='nearest', origin='lower', alpha=0.8)
 
 
 def plot_line(x, y, **kwargs):

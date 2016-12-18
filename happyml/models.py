@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from utils import count_equals
+from utils import count_equals, flatten_one_hot
 
 
 class Model(object):
@@ -26,6 +26,9 @@ class Model(object):
 
     def accuracy(self, X, y):
         output = self.predict(X)
+        if len(output.shape) > 1:
+            output = flatten_one_hot(output)
+            y = flatten_one_hot(y)
         correct = count_equals(output, y)
         return float(correct) / X.shape[0]
 

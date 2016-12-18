@@ -198,7 +198,7 @@ class Neg(Element):
         Element.__init__(self, inputs=[input], name="-", **args)
 
     def forward(self):
-        self.value = self.inputs[0].value
+        self.value = -self.inputs[0].value
 
     def backward(self, gradients):
         i = self.inputs[0]
@@ -310,7 +310,6 @@ class Abs(Element):
         return "abs(%s)" % str(self.inputs[0])
 
 
-
 class Max(Element):
 
     def __init__(self, input1, input2, **args):
@@ -356,6 +355,23 @@ class ReduceSum(Element):
 
     def __str__(self):
         return "sum%s" % str(self.inputs[0])
+
+
+class Log(Element):
+
+    def __init__(self, element, **args):
+        args.setdefault("name", "log")
+        Element.__init__(self, inputs=[element],
+                               shape=element.shape,
+                               **args)
+
+    def forward(self):
+        self.value = np.log(self.inputs[0].value)
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            gradients[element] += (1 / element.value) * gradients[self]
 
 
 class Tanh(Element):
@@ -411,6 +427,28 @@ class ReLU(Element):
         if element.has_parameter:
             grad_max = (element.value >= self.epsilon).astype(float)
             gradients[element] += grad_max * gradients[self]
+
+
+class Softmax(Element):
+
+    def __init__(self, element, **args):
+        args.setdefault("name", "Softmax")
+        Element.__init__(self, inputs=[element],
+                               shape=element.shape,
+                               **args)
+
+    def forward(self):
+        value = self.inputs[0].value
+        value = value - np.max(value)
+        value = np.exp(value)
+        value /= np.sum(value, axis=0)
+        self.value = value
+
+    def backward(self, gradients):
+        element = self.inputs[0]
+        if element.has_parameter:
+            gradients[element] += (gradients[self] - np.dot(
+                self.value, gradients[self])) * self.value
 
 
 class ComputationalGraphModel(Model):
