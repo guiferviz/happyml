@@ -7,6 +7,7 @@ from StringIO import StringIO
 import numpy as np
 
 from happyml.utils import one_hot, flatten_one_hot
+from happyml.plot import dataset as dataset_plot
 
 
 DATASET_TYPES = [
@@ -18,17 +19,10 @@ DATASET_TYPES = [
 
 
 class DataSet(object):
-    """Generic collection of inputs and outputs.
+    """Generic collection of inputs and outputs. """
 
-    """
 
-    X = None
-
-    Y = None
-
-    _type = None
-
-    _classes = None
+    plot = dataset_plot
 
 
     def __init__(self, X=None, Y=None):
@@ -38,6 +32,9 @@ class DataSet(object):
             self.X = self.X.reshape((-1, 1))
         if self.Y.ndim == 1:
             self.Y = self.Y.reshape((-1, 1))
+        self._type = None
+        self._classes = None
+        self._plot_type = None
 
 
     def get_N(self):
@@ -96,7 +93,7 @@ class DataSet(object):
 
     def get_type(self, force=False):
         if force or self._type is None:
-            self._type = get_type(self.Y)
+            self._type = infer_type(self.Y)
 
         return self._type
 
@@ -165,7 +162,7 @@ def show_numpy(dataset):
     sys.stdout.write("Y = np.%s\n" % repr(dataset.Y))
 
 
-def get_type(y):
+def infer_type(y):
     """Try to guess the type of the numpy array.
 
     The differents types are:

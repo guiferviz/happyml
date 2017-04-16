@@ -21,3 +21,9 @@ def greet():
 
 
 config, config_files_used = read_config()
+
+
+#import happyml.models as models
+from models import *
+import datasets
+import plot

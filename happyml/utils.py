@@ -17,9 +17,9 @@ def count_equals(v1, v2):
 
     """
     if v1.ndim != 1:
-        v1 = v1.flatten()
+        v1 = v1.ravel()
     if v2.ndim != 1:
-        v2 = v2.flatten()
+        v2 = v2.ravel()
 
     return np.count_nonzero(v1 == v2)
 
@@ -81,11 +81,28 @@ def one_hot(vector):
     return vector
 
 
-def flatten_one_hot(vector):
-    return np.argmax(vector, axis=1)
+def flatten_one_hot(vector, axis=1):
+    return np.argmax(vector, axis=axis)
 
 
 def shuffle(x, y):
     assert len(x) == len(y)
-    p = numpy.random.permutation(len(x))
+    p = np.random.permutation(len(x))
     return x[p], y[p]
+
+
+def function2predict(f):
+    """Return a function that receives single inputs to a
+    function that process several inputs one by one.
+
+    This method uses a loop, so it is not optimized.
+
+    """
+    return lambda X: f_predict(f, X)
+
+
+def f_predict(f, X):
+    """Iterate through the first dimension of X and call f with each
+    of those values. """
+    X = np.atleast_2d(X)
+    return np.apply_along_axis(f, 1, X)

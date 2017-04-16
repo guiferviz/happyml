@@ -1,6 +1,6 @@
 
 doc-warnings: true
-strictness: veryhigh
+strictness: high
 
 ignore-paths:
   - doc

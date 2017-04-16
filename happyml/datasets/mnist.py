@@ -18,8 +18,8 @@ from happyml.config import happyml_data_dir
 from .datasets import DataSet
 
 
-YANN_LECUN_MNIST = 'http://yann.lecun.com/exdb/mnist/'
-MNIST_DATA_SUBDIR = 'mnist'
+YANN_LECUN_MNIST = "http://yann.lecun.com/exdb/mnist/"
+MNIST_DATA_SUBDIR = "mnist"
 
 
 def load(data_dir=None, normalize=True, invert=True):

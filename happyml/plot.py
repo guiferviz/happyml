@@ -83,8 +83,8 @@ def get_theme(prop=None):
     (colors, size, markers, alpha...).
 
     If you do not want the full theme dict you can use
-    the prop argument to get only one prop of the current
-    theme.
+    the prop argument to get only one property of the
+    current theme.
 
     Args:
         prop (string): Return the ``prop`` value of the
@@ -170,7 +170,7 @@ def get_binary_margin_area_colors():
             light_hex_color(get_class_color(1), light=0.3))
 
 
-def predict_1d_area(model, limits=None, samples=50, **kwargs):
+def predict_1d(predict, limits=None, samples=50, **kwargs):
     if not limits:
         limits = [-1, 1]
     elif len(limits) < 2:
@@ -179,17 +179,17 @@ def predict_1d_area(model, limits=None, samples=50, **kwargs):
     x = np.linspace(limits[0], limits[1], num=samples)
     x = x.reshape((samples, 1))
 
-    y = model.predict(x)
+    y = predict(x)
 
     return x.flatten(), y
 
 
-def predict_area(model, limits=None, samples=50,
+def predict_2d(predict, limits=None, samples=50,
                  x_samples=None, y_samples=None, **kwargs):
     """Evaluate a model on a rectangular area.
 
     Args:
-        model (:attr:`happyml.models.Hypothesis`): Model to evaluate.
+        predict (function): Predict function of the model to evaluate.
         limits (list): Position and dimension of the prediction area.
             Indicated by a list of the form [xmin, xmax, ymin, ymax].
             Defaults to ``[-1, 1, -1, 1]``.
@@ -244,9 +244,9 @@ def predict_area(model, limits=None, samples=50,
     # the first are the x coordinates, the second are the y coordinates.
     coordinates = np.array([X, Y]).reshape(2, -1).T
     # Use the model to predict an output on each coordinate pair.
-    predicted = model.predict(coordinates)
+    predicted = predict(coordinates)
     # Get a flattened version if it is a multiclass matrix.
-    if len(predicted.shape) > 1:
+    if len(predicted.shape) > 1 and predicted.shape[1] > 1:
         predicted = flatten_one_hot(predicted)
     # Convert the predicted values to a matrix form.
     Z = predicted.reshape(X.shape)  # or Y.shape
@@ -378,7 +378,8 @@ def prepare_plot(limits=None, scaled=True, autoscale=True,
                  margin=0, margin_x=None, margin_y=None,
                  grid=False, grid_x=None, grid_y=None,
                  ticks=True, off=False, xlabel=None, ylabel=None,
-                 label_size=None, title=None, title_size=None, **kwargs):
+                 label_size=None, title=None, title_size=None,
+                 figsize=None, **kwargs):
     """Set basic properties of the matplotlib plot."""
     ax = plt.gca()
 
@@ -426,9 +427,17 @@ def prepare_plot(limits=None, scaled=True, autoscale=True,
 
     if title is not None:
         if title_size is not None:
-            ax.set_title(title, fontsize=label_size)
+            ax.set_title(title, fontsize=title_size)
         else:
             ax.set_title(title)
+
+    if figsize is not None:
+        if isinstance(figsize, (int, float, long)):
+            figsize = (figsize, figsize)
+        if len(figsize) == 1:
+            figsize = figsize * 2
+        fig = plt.gcf()
+        fig.set_size_inches(figsize)
 
 
 def dataset_continuous(dataset, **kwargs):
@@ -484,6 +493,7 @@ def dataset_classification(dataset, colors=None, markers=None,
     alpha = alpha or theme["alpha"]
 
     classes = dataset.get_flatten_classes()
+    classes[classes < 0] = 0
     unique_classes = dataset.get_classes()
     unique_classes[unique_classes < 0] = 0
     if return_all:
@@ -519,7 +529,7 @@ def dataset_classification(dataset, colors=None, markers=None,
 
 
 def dataset(dataset, dtype=None, **kwargs):
-    dtype = dtype or dataset.get_type()
+    dtype = dtype or dataset._plot_type or dataset.get_type()
     if "continuous" in dtype:
         return dataset_continuous(dataset, **kwargs)
     elif "binary" in dtype or "multiclass" in dtype:
@@ -628,39 +638,33 @@ def plot_line(x, y, **kwargs):
     prepare_plot(**kwargs)
 
 
-def model_binary_ones(model, **kwargs):
-    X, Y, Z = predict_area(model, **kwargs)
+def model_binary_ones(predict, **kwargs):
+    X, Y, Z = predict_2d(predict, **kwargs)
     binary_ones(X, Y, Z, **kwargs)
 
 
-def model_binary_margins(model, **kwargs):
-    X, Y, Z = predict_area(model, **kwargs)
+def model_binary_margins(predict, **kwargs):
+    X, Y, Z = predict_2d(predict, **kwargs)
     binary_margins(X, Y, Z, **kwargs)
 
 
-def model_multiclass(model, **kwargs):
-    X, Y, Z = predict_area(model, **kwargs)
+def model_multiclass(predict, **kwargs):
+    X, Y, Z = predict_2d(predict, **kwargs)
     multiclass(X, Y, Z, **kwargs)
 
 
-def model_line(model, **kwargs):
-    x, y = predict_1d_area(model, **kwargs)
+def model_line(predict, **kwargs):
+    x, y = predict_1d(predict, **kwargs)
     plot_line(x, y, **kwargs)
 
 
-def model(model, plot_type=None, data=None, **kwargs):
-    if data is not None: dataset(data)
-    plot_type = plot_type or model._plot_type
-    if plot_type:
-        if "binary_one" in plot_type:
-            return model_binary_ones(model, **kwargs)
-        elif "binary_margin" in plot_type:
-            return model_binary_margins(model, **kwargs)
-        elif "multiclass" in plot_type:
-            return model_multiclass(model, **kwargs)
-        elif "line" in plot_type:
-            return model_line(model, **kwargs)
-    raise ValueError("Model of type '%s' cannot be plotted" %
+def model(predict, plot_type=None, **kwargs):
+    """Plot a model using the especified plot type. """
+    model_plot = MODELS_PLOT.get(plot_type, None)
+    if model_plot:
+        return model_plot(predict, **kwargs)
+    raise ValueError("Model of type '%s' cannot be plotted: define "
+                     "'_plot_type' in the model" %
                      plot_type)
 
 
@@ -738,19 +742,6 @@ def suptitle(*args, **kwargs):
     return plt.suptitle(*args, **kwargs)
 
 
-from models import Model
-Model.plot = model
-Model._plot_type = None
-
-from models import Perceptron, PerceptronKernel, LinearRegression
-Perceptron._plot_type = "binary_ones"
-PerceptronKernel._plot_type = "binary_ones"
-LinearRegression._plot_type = "line"
-
-from datasets import DataSet
-DataSet.plot = dataset
-
-
 _animation_index = 0
 def animation(update_fun, interval=1000, fig=None, **kwargs):
     kwargs.setdefault("show", True)
@@ -774,3 +765,12 @@ def show(*args, **kwargs):
     plt.tight_layout()
     plt.subplots_adjust(top=0.85)
     plt.show(*args, **kwargs)
+
+
+MODELS_PLOT = {
+    "binary_one": model_binary_ones,
+    "binary_ones": model_binary_ones,
+    "binary_margin": model_binary_margins,
+    "multiclass": model_multiclass,
+    "line": model_line,
+}
