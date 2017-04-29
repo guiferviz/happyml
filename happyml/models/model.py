@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from happyml.utils import count_equals, \
+from happyml.utils import count_equals, function2predict, \
                           flatten_one_hot
 from happyml.plot import model as model_plot
 
@@ -19,6 +19,9 @@ class Model(object):
     that return non-continuous values. Avoids sharpened edges.
     """
     plot_predict = None
+
+    """Same as plot_predict but one sample at a time. """
+    plot_h = None
 
 
     def h(self, x):
@@ -90,16 +93,23 @@ class Model(object):
         Basic error measure for regression models.
 
         """
+        Y = np.atleast_2d(Y)
         output = self.predict(X)
-        assert X.shape == Y.shape
+        if output.ndim == 1:
+            output = np.atleast_2d(output).T
+
+        assert output.shape == Y.shape
         error = np.mean(np.square(output - Y), axis=0)
 
-        return error
+        return np.squeeze(error)
 
-    def plot(self, plot_predict=None, plot_type=None, **kwargs):
+    def plot(self, plot_type=None, **kwargs):
         """Delegate the plot to the plot module. """
         # Read or infer params.
-        plot_predict = plot_predict or self.plot_predict or self.predict
+        plot_predict_h = None
+        if self.plot_h:
+            plot_predict_h = function2predict(self.plot_h)
+        plot_predict = plot_predict_h or self.plot_predict or self.predict
         plot_type = plot_type or self.get_plot_type()
         # Call plot method on plot module.
         model_plot(plot_predict, plot_type, **kwargs)

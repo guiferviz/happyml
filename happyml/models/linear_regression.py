@@ -11,18 +11,15 @@ class LinearRegression(Model):
 
 
     def __init__(self, w=None, b=None, d=1):
-        self.w = w if w is not None else np.zeros(d)
+        self.w = np.asarray(w) if w is not None \
+                               else np.zeros(d)
         self.b = b if b is not None else 0
 
 
     def h(self, x):
         return np.dot(self.w.T, x) + self.b
 
-    def transform(self, X):
-        return X
-
     def predict(self, X):
-        X = self.transform(X)
         return np.dot(X, self.w) + self.b
 
     def fit(self, X, y):

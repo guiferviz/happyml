@@ -170,22 +170,25 @@ def get_binary_margin_area_colors():
             light_hex_color(get_class_color(1), light=0.3))
 
 
-def predict_1d(predict, limits=None, samples=50, **kwargs):
+def predict_1d(predict, limits=None, samples=50,
+               transform=None, **kwargs):
     if not limits:
         limits = [-1, 1]
     elif len(limits) < 2:
         raise ValueError("limits need at least 2 values: [xmin, xmax]")
 
     x = np.linspace(limits[0], limits[1], num=samples)
-    x = x.reshape((samples, 1))
+    X = x.reshape((samples, 1))
+    if transform:
+        X = transform(X)
+    y = predict(X)
 
-    y = predict(x)
-
-    return x.flatten(), y
+    return x, y
 
 
 def predict_2d(predict, limits=None, samples=50,
-                 x_samples=None, y_samples=None, **kwargs):
+               x_samples=None, y_samples=None,
+               transform=None, **kwargs):
     """Evaluate a model on a rectangular area.
 
     Args:
@@ -199,6 +202,8 @@ def predict_2d(predict, limits=None, samples=50,
             of samples for x axis. Defaults to ``samples``.
         y_samples (int): Use it when you want a different number
             of samples for y axis. Defaults to ``samples``.
+        transform (function): Apply a transformation to X and return
+            the new value.
 
     Returns:
         X, Y, Z (numpy.ndarray): 3 matrices of the same size, i.e. of size
@@ -243,7 +248,10 @@ def predict_2d(predict, limits=None, samples=50,
     # Transforms the grids values to a matrix with two columns:
     # the first are the x coordinates, the second are the y coordinates.
     coordinates = np.array([X, Y]).reshape(2, -1).T
-    # Use the model to predict an output on each coordinate pair.
+    # Transform the input if needed.
+    if transform:
+        coordinates = transform(coordinates)
+    # Predict an output on each coordinate pair.
     predicted = predict(coordinates)
     # Get a flattened version if it is a multiclass matrix.
     if len(predicted.shape) > 1 and predicted.shape[1] > 1:

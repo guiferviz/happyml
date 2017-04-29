@@ -3,31 +3,16 @@
 import numpy as np
 
 from model import Model
-
-
-def linear_kernel(x_1, x_2):
-    return np.dot(x_1, x_2)
-
-def gaussian_kernel(x_1, x_2, sigma=1):
-    return np.exp(-np.linalg.norm(x_1 - x_2, 2) ** 2 / (2. * sigma ** 2))
-
-def rational_quadratic_kernel(x_1, x_2, sigma=0.3):
-    norm = np.linalg.norm(x_1 - x_2, 2) ** 2
-    return 1 - norm / (norm + sigma)
-
-def polynomial_kernel(x_1, x_2, c=0, d=1):
-    return np.power(np.dot(x_1, x_2) + c, d)
-
-def get_polynomial_kernel(c=0, d=1):
-    return lambda x_1, x_2: polynomial_kernel(x_1, x_2, c=c, d=d)
-
-def get_gaussian_kernel(sigma=1):
-    return lambda x_1, x_2: gaussian_kernel(x_1, x_2, sigma=sigma)
+from happyml.kernels import linear, gaussian, \
+                            polynomial, rational_quadratic
 
 
 class PerceptronKernel(Model):
 
-    def __init__(self, X, y, kernel):
+    plot_type = "binary_ones"
+
+
+    def __init__(self, X, y, kernel="gaussian"):
         self.n = X.shape[0]
         self.d = X.shape[1]
 
@@ -37,16 +22,16 @@ class PerceptronKernel(Model):
         self.a = np.zeros(self.n)
 
         if kernel == "linear":
-            self.kernel = linear_kernel
+            self.kernel = linear
         elif kernel == "gaussian":
-            self.kernel = gaussian_kernel
+            self.kernel = gaussian
         else:
             self.kernel = kernel
 
     def h(self, x):
-        return np.sign(self._h(x))
+        return np.sign(self.plot_h(x))
 
-    def _h(self, x):
+    def plot_h(self, x):
         if x.shape[0] == self.d:
             x = np.hstack((1, x))
         out = 0
@@ -56,8 +41,14 @@ class PerceptronKernel(Model):
         return out
 
     def pla(self, iterations=10):
+        self.a.fill(0)
         for i in range(iterations):
+            errors = False
             for j in range(self.n):
                 x_j = self.X[j, :].T
                 if self.h(x_j) != self.y[j]:
+                    errors = True
                     self.a[j] += 1
+            if not errors:
+                return i
+        return iterations
